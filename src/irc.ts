@@ -1,9 +1,10 @@
 import IRC from "irc-framework"
 import { pick } from "ramda"
 import { Server } from "./config";
+import CommandRunner from "./commandRunner";
 
 
-interface MatchType {
+export interface MatchType {
   type: String;
   from_server: boolean;
   nick: String;
@@ -48,11 +49,15 @@ export default class ChxtIrc {
     this.client.connect()
   }
 
-  handleCommand(params: MatchType) {
+  async handleCommand(params: MatchType) {
     console.log("MATCH")
     console.log(params)
     //@ts-ignore
     const [fullMsg, prefix, command, argument] = params.message.match(this.matcher)
     console.log([fullMsg, prefix, command, argument])
+
+    const runner = new CommandRunner()
+    const {data} = await runner.run({name: command, argument})
+    params.reply(data)
   }
 }

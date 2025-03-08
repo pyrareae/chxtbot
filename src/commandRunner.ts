@@ -22,8 +22,16 @@ export async function executeCode(code: String, params: object = {}): Promise<{o
   return await runSandboxed(callback, execOptions)
 }
 
-export default class CommandRunner {
-  constructor() {
+const dummyCode = `
+  export default "meow from eval! " + env.PARAMS.argument
+`
 
+export interface CommandRunnerRunParams {
+  name: String,
+  argument: String,
+}
+export default class CommandRunner {
+  async run({name, argument} : CommandRunnerRunParams) {
+    return executeCode(dummyCode, {argument})
   }
 }
