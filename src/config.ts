@@ -14,6 +14,7 @@ export class Server extends ConnectionDetails {
   host: String = '';
   port: Number = 6697;
   channels: String[] = [];
+  commandPrefix: String = "!!";
   constructor(params: Server) {
     super()
     Object.assign(this, params)
