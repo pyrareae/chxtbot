@@ -4,7 +4,7 @@ import { pipe, map } from "ramda"
 
 console.log(config)
 
-export const connections = []
+export const connections: ChxtIrc[] = []
 
 export const main = {
   // connections: [],
