@@ -2,8 +2,9 @@ nick = "chxtbox"
 
 [servers]
 [servers.default]
-host = "chat.example.com"
-port = "1234"
 channels = [
-  "##chxtbot"
+  "##chxtbox"
 ]
+[servers.libera]
+host = "irc.libera.chat"
+port = 6665

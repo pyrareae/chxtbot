@@ -1,4 +1,3 @@
-import * as chxt from "./chxt"
+import {main, connections} from "./chxt"
 
-console.log(chxt.config)
-
+main.start()

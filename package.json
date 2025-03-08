@@ -16,8 +16,10 @@
   "packageManager": "pnpm@10.5.2",
   "type": "module",
   "dependencies": {
+    "@types/ramda": "^0.30.2",
     "express": "^4.21.2",
-    "irc": "^0.5.2",
+    "irc-framework": "^4.14.0",
+    "ramda": "^0.30.1",
     "toml": "^3.0.0",
     "tsx": "^4.19.3"
   }
