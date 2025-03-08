@@ -7,6 +7,7 @@ describe("executeCode", () => {
     export default meowAt(env.PARAMS.name)
   `
   it("should execute code", async () => {
-    const runner = CommandRunner
+    const {data} = await executeCode(exampleCode, {name: "world"})
+    data.should.equal("meow world!")
   })
 })

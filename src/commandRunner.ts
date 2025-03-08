@@ -1,20 +1,25 @@
 import { type SandboxOptions, loadQuickJs } from "@sebastianwessel/quickjs"
 
+const { runSandboxed } = await loadQuickJs()
+
 // the sandbox needs wrapped functions, so the docs claim
 const wrap = (fn: Function) => (...args: any) => fn(...args)
 
-const execOptions: SandboxOptions = {
-  allowFetch: true,
-  allowFs: false,
-  env: {
-    CHXT: {
-      log: wrap(console.log)
+export async function executeCode(code: String, params: object = {}): Promise<{ok: boolean, data: any}> {
+  const execOptions: SandboxOptions = {
+    allowFetch: true,
+    allowFs: false,
+    env: {
+      CHXT: {
+        log: wrap(console.log)
+      },
+      PARAMS: params
     }
   }
-}
-
-export function executeCode(code: String) {
-
+  
+  // @ts-ignore
+  const callback = async ({evalCode}) => evalCode(code)
+  return await runSandboxed(callback, execOptions)
 }
 
 export default class CommandRunner {
