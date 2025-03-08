@@ -22,7 +22,6 @@ export default class ChxtIrc {
       this.channels = this.config.channels.map(channelName => {
         const channel = this.client.channel(channelName)
         channel.join()
-        channel.say("boop")
         return channel
       })
     })
