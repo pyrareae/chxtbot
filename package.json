@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha",
-    "start": "tsx ./src/serve.ts"
+    "start": "tsx ./src/serve.ts",
+    "console": "tsx ./src/console.js"
   },
   "keywords": [],
   "author": "",
