@@ -9,7 +9,8 @@
     "build": "bun build ./src/chxt.ts",
     "test": "mocha",
     "start": "bun --watch ./src/serve.ts --watch=src/**/*.ts",
-    "console": "bun ./src/console.js"
+    "console": "bun ./src/console.js",
+    "webui": "bun --watch ./src/webserver.ts --watch=src/**/*.ts"
   },
   "keywords": [],
   "author": "",
@@ -20,9 +21,13 @@
     "@jitl/quickjs-ng-wasmfile-release-sync": "^0.31.0",
     "@sebastianwessel/quickjs": "^2.1.0",
     "@types/ramda": "^0.30.2",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.1",
     "express": "^4.21.2",
     "irc-framework": "^4.14.0",
     "ramda": "^0.30.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "toml": "^3.0.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.3"
@@ -30,7 +35,8 @@
   "devDependencies": {
     "@types/chai": "^5.2.0",
     "@types/mocha": "^10.0.10",
+    "bun-plugin-tailwind": "^0.0.15",
     "chai": "^5.2.0",
-    "mocha": "^11.1.0",
+    "mocha": "^11.1.0"
   }
 }

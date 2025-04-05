@@ -1,0 +1,4 @@
+[serve.static]
+development = true
+# We can add TailwindCSS later if needed
+# plugins = ["bun-plugin-tailwind"] 

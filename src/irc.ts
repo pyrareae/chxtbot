@@ -21,10 +21,17 @@ export interface MatchType {
   reply: Function;
 }
 
+export interface Message {
+  from?: string;
+  message: string;
+  time?: Date;
+  channel: string;
+}
+
 export default class ChxtIrc {
   client: IRC.Client;
   config: Server;
-  channels: any[] = [];
+  channels: Map<string, { messages: Message[] }> = new Map();
   matcher: RegExp;
 
   constructor(con: Server) {
@@ -39,12 +46,35 @@ export default class ChxtIrc {
     this.client.on('raw', ({line}) => console.log(line))
     this.client.on('debug', console.log)
     this.client.on('registered', () => {
-      this.channels = this.config.channels.map(channelName => {
+      this.config.channels.forEach(channelName => {
         const channel = this.client.channel(channelName)
         channel.join()
-        return channel
-      })
-    })
+        this.channels.set(channelName, { messages: [] });
+      });
+    });
+    
+    // Add listener for incoming messages
+    this.client.on('message', (event) => {
+      const { nick, target, message } = event;
+      // Only store channel messages
+      if (target.startsWith('#')) {
+        const channelData = this.channels.get(target);
+        if (channelData) {
+          channelData.messages.push({
+            from: nick,
+            message,
+            time: new Date(),
+            channel: target
+          });
+          
+          // Limit message history to 100 messages per channel
+          if (channelData.messages.length > 100) {
+            channelData.messages.shift();
+          }
+        }
+      }
+    });
+    
     this.client.match(this.matcher, this.handleCommand.bind(this))
     this.client.connect()
   }
@@ -59,5 +89,38 @@ export default class ChxtIrc {
     const runner = new CommandRunner()
     const {data} = await runner.run({name: command, argument})
     params.reply(data)
+  }
+  
+  // Get messages for a specific channel
+  getChannelMessages(channelName: string): Message[] | null {
+    const channelData = this.channels.get(channelName);
+    return channelData ? channelData.messages : null;
+  }
+  
+  // Send a message to a channel
+  sendMessage(channelName: string, message: string): boolean {
+    if (!this.client.connected) {
+      return false;
+    }
+    
+    const channel = this.client.channel(channelName);
+    if (!channel) {
+      return false;
+    }
+    
+    channel.say(message);
+    
+    // Add the message to our local storage too
+    const channelData = this.channels.get(channelName);
+    if (channelData) {
+      channelData.messages.push({
+        from: this.client.user.nick,
+        message,
+        time: new Date(),
+        channel: channelName
+      });
+    }
+    
+    return true;
   }
 }
