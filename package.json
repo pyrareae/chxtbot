@@ -8,7 +8,7 @@
   "scripts": {
     "build": "bun build ./src/chxt.ts",
     "test": "mocha",
-    "start": "bun ./src/serve.ts",
+    "start": "bun --watch ./src/serve.ts --watch=src/**/*.ts",
     "console": "bun ./src/console.js"
   },
   "keywords": [],
