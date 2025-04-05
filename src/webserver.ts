@@ -3,6 +3,9 @@ import { main, connections } from "./chxt";
 import indexHtml from "../public/index.html";
 import { initializeDatabase, UserRepository, CommandRepository } from "./database";
 
+// Import global styles
+import "./styles/globals.css";
+
 // Initialize database
 const initializeApp = async () => {
   // Initialize database

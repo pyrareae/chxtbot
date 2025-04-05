@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/src/components/ui/button';
 
 interface Command {
   id: number;
@@ -183,8 +184,20 @@ export function CommandsView() {
                   <td>{command.user.ircIdentifier}</td>
                   <td>{command.isActive ? 'Active' : 'Inactive'}</td>
                   <td>
-                    <button onClick={() => handleEdit(command)}>Edit</button>
-                    <button onClick={() => handleDelete(command.id)}>Delete</button>
+                    <Button
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={() => handleEdit(command)}
+                    >
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => handleDelete(command.id)}
+                    >
+                      Delete
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -249,14 +262,19 @@ export default `Command result: ${env.PARAMS.argument}`;"
           )}
           
           <div className="form-actions">
-            <button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading}>
               {editingCommand ? 'Update Command' : 'Create Command'}
-            </button>
+            </Button>
             
             {editingCommand && (
-              <button type="button" onClick={resetForm} disabled={isLoading}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={resetForm} 
+                disabled={isLoading}
+              >
                 Cancel
-              </button>
+              </Button>
             )}
           </div>
         </form>
