@@ -27,7 +27,7 @@ interface ChatViewProps {
   handleSendMessage: () => void;
 }
 
-export function ChatView({
+export default function ChatView({
   connections,
   messages,
   activeServer,

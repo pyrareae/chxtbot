@@ -10,7 +10,8 @@
     "test": "mocha",
     "start": "bun --watch ./src/serve.ts --watch=src/**/*.ts",
     "console": "bun ./src/console.js",
-    "webui": "bun --watch ./src/webserver.ts --watch=src/**/*.ts"
+    "webui": "bun --watch ./src/webserver.ts --watch=src/**/*.ts",
+    "dev": "bun --watch ./src/webserver.ts --watch=src/**/*.ts"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,10 @@
   "type": "module",
   "dependencies": {
     "@jitl/quickjs-ng-wasmfile-release-sync": "^0.31.0",
+    "@monaco-editor/react": "^4.7.0",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-slot": "^1.1.2",
     "@sebastianwessel/quickjs": "^2.1.0",
     "@types/ramda": "^0.30.2",
     "@types/react": "^19.1.0",

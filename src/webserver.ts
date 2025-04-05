@@ -2,6 +2,7 @@ import { serve } from "bun";
 import { main, connections } from "./chxt";
 import indexHtml from "../public/index.html";
 import { initializeDatabase, UserRepository, CommandRepository } from "./database";
+import CommandRunner from './commandRunner';
 
 // Import global styles
 import "./styles/globals.css";
@@ -115,103 +116,203 @@ const initializeApp = async () => {
       
       // Commands API
       "/api/commands": {
-        async GET() {
-          const commands = await CommandRepository.find({ relations: ["user"] });
-          return Response.json(commands);
-        },
-        async POST(req: Request) {
+        GET: async () => {
           try {
-            const { ircIdentifier, name, code } = await req.json() as {
-              ircIdentifier: string;
-              name: string;
-              code: string;
-            };
+            const commands = await CommandRepository.find({
+              relations: ["user"],
+              order: { name: "ASC" }
+            });
+            return Response.json(commands);
+          } catch (error) {
+            console.error("Error fetching commands:", error);
+            return Response.json({ error: "Failed to fetch commands" }, { status: 500 });
+          }
+        },
+        POST: async (req: Request) => {
+          try {
+            const body = await req.json();
             
-            if (!ircIdentifier || !name || !code) {
-              return new Response("IRC identifier, command name, and code are required", { status: 400 });
+            // Validate required fields
+            if (!body.name || !body.code) {
+              return Response.json(
+                { error: "Name and code are required" },
+                { status: 400 }
+              );
+            }
+
+            // Find the user
+            const user = await UserRepository.findOne({ where: { id: body.userId } });
+            if (!user) {
+              return Response.json({ error: "User not found" }, { status: 404 });
             }
             
-            // Find or create user
-            const user = await UserRepository.findOrCreate(ircIdentifier);
-            
-            // Create command
-            const command = await CommandRepository.createCommand(user, name, code);
+            // Create the command
+            const command = await CommandRepository.createCommand(
+              user,
+              body.name,
+              body.code
+            );
             
             return Response.json(command);
           } catch (error) {
             console.error("Error creating command:", error);
-            return new Response("Error processing request", { status: 500 });
+            return Response.json({ error: "Failed to create command" }, { status: 500 });
           }
         }
       },
       
-      // Single command API
+      // Individual command route
       "/api/commands/:id": {
-        async GET(req: Request) {
-          const url = new URL(req.url);
-          const id = parseInt(url.pathname.split("/").pop() || "0");
-          
-          if (isNaN(id) || id <= 0) {
-            return new Response("Invalid command ID", { status: 400 });
-          }
-          
-          const command = await CommandRepository.findOne({ 
-            where: { id },
-            relations: ["user"]
-          });
-          
-          if (!command) {
-            return new Response("Command not found", { status: 404 });
-          }
-          
-          return Response.json(command);
-        },
-        async PUT(req: Request) {
+        GET: async (req: Request, { id }: { id: string }) => {
           try {
-            const url = new URL(req.url);
-            const id = parseInt(url.pathname.split("/").pop() || "0");
+            const commandId = parseInt(id);
             
-            if (isNaN(id) || id <= 0) {
-              return new Response("Invalid command ID", { status: 400 });
+            if (isNaN(commandId)) {
+              return Response.json({ error: "Invalid ID" }, { status: 400 });
             }
             
-            const { name, code, isActive } = await req.json() as {
-              name: string;
-              code: string;
-              isActive: boolean;
-            };
+            const command = await CommandRepository.findOne({
+              where: { id: commandId },
+              relations: ["user"]
+            });
             
-            if (!name || !code === undefined) {
-              return new Response("Command name and code are required", { status: 400 });
+            if (!command) {
+              return Response.json({ error: "Command not found" }, { status: 404 });
             }
             
-            const updatedCommand = await CommandRepository.updateCommand(id, name, code, isActive);
+            return Response.json(command);
+          } catch (error) {
+            console.error("Error fetching command:", error);
+            return Response.json({ error: "Failed to fetch command" }, { status: 500 });
+          }
+        },
+        PUT: async (req: Request, { id }: { id: string }) => {
+          try {
+            const commandId = parseInt(id);
+            
+            if (isNaN(commandId)) {
+              return Response.json({ error: "Invalid ID" }, { status: 400 });
+            }
+            
+            const body = await req.json();
+            
+            // Validate required fields
+            if (!body.name || !body.code) {
+              return Response.json(
+                { error: "Name and code are required" },
+                { status: 400 }
+              );
+            }
+            
+            // Update the command
+            const updatedCommand = await CommandRepository.updateCommand(
+              commandId,
+              body.name,
+              body.code,
+              body.isActive
+            );
             
             if (!updatedCommand) {
-              return new Response("Command not found", { status: 404 });
+              return Response.json({ error: "Command not found" }, { status: 404 });
             }
             
             return Response.json(updatedCommand);
           } catch (error) {
             console.error("Error updating command:", error);
-            return new Response("Error processing request", { status: 500 });
+            return Response.json({ error: "Failed to update command" }, { status: 500 });
           }
         },
-        async DELETE(req: Request) {
-          const url = new URL(req.url);
-          const id = parseInt(url.pathname.split("/").pop() || "0");
-          
-          if (isNaN(id) || id <= 0) {
-            return new Response("Invalid command ID", { status: 400 });
+        DELETE: async (req: Request, { id }: { id: string }) => {
+          try {
+            const commandId = parseInt(id);
+            
+            if (isNaN(commandId)) {
+              return Response.json({ error: "Invalid ID" }, { status: 400 });
+            }
+            
+            const success = await CommandRepository.deleteCommand(commandId);
+            
+            if (!success) {
+              return Response.json({ error: "Command not found" }, { status: 404 });
+            }
+            
+            return Response.json({ success: true });
+          } catch (error) {
+            console.error("Error deleting command:", error);
+            return Response.json({ error: "Failed to delete command" }, { status: 500 });
           }
-          
-          const deleted = await CommandRepository.deleteCommand(id);
-          
-          if (!deleted) {
-            return new Response("Command not found", { status: 404 });
+        }
+      },
+      
+      // Command run route
+      "/api/commands/:id/run": {
+        POST: async (req: Request, { id }: { id: string }) => {
+          try {
+            const commandId = parseInt(id);
+            
+            if (isNaN(commandId)) {
+              return Response.json({ error: "Invalid ID" }, { status: 400 });
+            }
+            
+            // Get the command
+            const command = await CommandRepository.findOne({
+              where: { id: commandId }
+            });
+            
+            if (!command) {
+              return Response.json({ error: "Command not found" }, { status: 404 });
+            }
+            
+            // Extract any argument from the request body
+            let argument = "";
+            try {
+              const body = await req.json();
+              argument = body.argument || "";
+            } catch (e) {
+              // If no body is provided, use an empty argument
+            }
+            
+            // Run the command
+            const commandRunner = new CommandRunner();
+            const result = await commandRunner.runScript(command.code, argument);
+            
+            return Response.json({ success: true, result });
+          } catch (error) {
+            console.error("Error running command:", error);
+            return Response.json(
+              { error: "Failed to run command", message: error instanceof Error ? error.message : "Unknown error" },
+              { status: 500 }
+            );
           }
-          
-          return new Response("Command deleted", { status: 200 });
+        }
+      },
+      
+      // Command test route
+      "/api/commands/test": {
+        POST: async (req: Request) => {
+          try {
+            const body = await req.json();
+            
+            // Validate required fields
+            if (!body.code) {
+              return Response.json(
+                { error: "Code is required" },
+                { status: 400 }
+              );
+            }
+            
+            // Run the command with the provided code and argument
+            const commandRunner = new CommandRunner();
+            const result = await commandRunner.runScript(body.code, body.argument || "");
+            
+            return Response.json({ success: true, result });
+          } catch (error) {
+            console.error("Error testing command:", error);
+            return Response.json(
+              { error: "Failed to test command", message: error instanceof Error ? error.message : "Unknown error" },
+              { status: 500 }
+            );
+          }
         }
       }
     },
@@ -219,6 +320,10 @@ const initializeApp = async () => {
     // Enable development mode for better error messages and hot reloading
     development: process.env.NODE_ENV !== "production",
   });
+
+  console.log("Starting webserver on http://localhost:3000");
+  console.log("API routes available at /api/*");
+  console.log("UI available at / and /commands");
 
   console.log(`Server running at ${server.url}`);
 };

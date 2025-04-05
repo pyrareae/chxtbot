@@ -2,3 +2,21 @@
 development = true
 # We can add TailwindCSS later if needed
 # plugins = ["bun-plugin-tailwind"] 
+
+[install]
+# Whether to install optionalDependencies
+optional = true
+
+# A default resolver for bare specifiers
+# "module" is the default, and it uses Node.js' module resolution
+# if you need more compatibility with Node.js, set to "node"
+resolver = "module"
+
+[debug]
+dumps = false
+
+# Define a path alias
+[paths]
+"react" = "./node_modules/react/index.js"
+"@components/*" = "./src/components/*"
+"@/lib/*" = "./src/lib/*" 

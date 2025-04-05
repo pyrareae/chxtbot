@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ChatView } from './ChatView';
-import { CommandsView } from './CommandsView';
+import ChatView from './ChatView';
+import CommandsView from './CommandsView';
 
 interface ServerConnection {
   name: string;

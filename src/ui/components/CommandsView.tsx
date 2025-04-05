@@ -1,284 +1,262 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/src/components/ui/button';
+"use client"
 
+import React, { useState, useEffect } from "react"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/shadcn/ui/table"
+import { Button } from "@/src/shadcn/ui/button"
+import { Input } from "@/src/shadcn/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/shadcn/ui/card"
+import { Badge } from "@/src/shadcn/ui/badge"
+import { MoreVertical, Play, Edit, Trash2, Search, Plus, AlertCircle } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/src/shadcn/ui/dropdown-menu"
+import { toast } from "@/src/hooks/use-toast"
+
+// Types from the backend
 interface Command {
-  id: number;
-  name: string;
-  code: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  userId: number;
-  user: {
-    id: number;
-    ircIdentifier: string;
-  };
+  id: number
+  name: string
+  code: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+  lastRun?: string
+  status?: "success" | "failed" | "running" | "idle"
 }
 
-export function CommandsView() {
-  const [commands, setCommands] = useState<Command[]>([]);
-  const [editingCommand, setEditingCommand] = useState<Command | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Form states
-  const [formIrcIdentifier, setFormIrcIdentifier] = useState('');
-  const [formName, setFormName] = useState('');
-  const [formCode, setFormCode] = useState('');
-  const [formIsActive, setFormIsActive] = useState(true);
-  
-  // Fetch commands from the API
-  const fetchCommands = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch('/api/commands');
-      if (!response.ok) {
-        throw new Error('Failed to fetch commands');
-      }
-      
-      const data = await response.json();
-      setCommands(data);
-    } catch (error) {
-      console.error('Error fetching commands:', error);
-      setError('Failed to load commands. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Load commands on component mount
+export default function CommandsView() {
+  const [commands, setCommands] = useState<Command[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+
   useEffect(() => {
-    fetchCommands();
-  }, []);
-  
-  // Handle form submission for creating or updating a command
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    
+    fetchCommands()
+  }, [])
+
+  const fetchCommands = async () => {
     try {
-      if (editingCommand) {
-        // Update an existing command
-        const response = await fetch(`/api/commands/${editingCommand.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: formName,
-            code: formCode,
-            isActive: formIsActive,
-          }),
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to update command');
-        }
-        
-        // Reset form and refresh commands
-        setEditingCommand(null);
-        fetchCommands();
-      } else {
-        // Create a new command
-        const response = await fetch('/api/commands', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ircIdentifier: formIrcIdentifier,
-            name: formName,
-            code: formCode,
-          }),
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to create command');
-        }
-        
-        // Reset form and refresh commands
-        resetForm();
-        fetchCommands();
+      setIsLoading(true)
+      const response = await fetch("/api/commands")
+      if (!response.ok) {
+        throw new Error("Failed to fetch commands")
       }
+      const data = await response.json()
+      
+      // Transform the data to include status and lastRun properties
+      const transformedData = data.map((cmd: Command) => ({
+        ...cmd,
+        lastRun: cmd.updatedAt ? new Date(cmd.updatedAt).toLocaleDateString() : "Never",
+        status: cmd.isActive ? "idle" : "disabled"
+      }))
+      
+      setCommands(transformedData)
     } catch (error) {
-      console.error('Error submitting command:', error);
-      setError('Failed to save command. Please try again.');
+      console.error("Error fetching commands:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load commands",
+        variant: "destructive",
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
-  
-  // Delete a command
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this command?')) {
-      return;
-    }
-    
-    setIsLoading(true);
-    setError(null);
-    
+  }
+
+  const filteredCommands = commands.filter(
+    (cmd: Command) =>
+      cmd.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const handleEdit = (commandId: number) => {
+    // Open the script editor
+    window.location.href = `/script-editor?id=${commandId}`
+  }
+
+  const handleRun = async (commandId: number) => {
     try {
-      const response = await fetch(`/api/commands/${id}`, {
-        method: 'DELETE',
-      });
+      // Update the local state to show the command is running
+      setCommands((prevCommands: Command[]) => 
+        prevCommands.map((cmd: Command) => 
+          cmd.id === commandId ? { ...cmd, status: "running" } : cmd
+        )
+      )
+
+      const response = await fetch(`/api/commands/${commandId}/run`, {
+        method: "POST",
+      })
       
       if (!response.ok) {
-        throw new Error('Failed to delete command');
+        throw new Error("Failed to run command")
       }
       
-      // Refresh commands
-      fetchCommands();
-    } catch (error) {
-      console.error('Error deleting command:', error);
-      setError('Failed to delete command. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Edit a command
-  const handleEdit = (command: Command) => {
-    setEditingCommand(command);
-    setFormIrcIdentifier(command.user.ircIdentifier);
-    setFormName(command.name);
-    setFormCode(command.code);
-    setFormIsActive(command.isActive);
-  };
-  
-  // Reset form fields
-  const resetForm = () => {
-    setEditingCommand(null);
-    setFormIrcIdentifier('');
-    setFormName('');
-    setFormCode('');
-    setFormIsActive(true);
-  };
-  
-  return (
-    <div className="commands-container">
-      <div className="commands-list">
-        <h2>Bot Commands</h2>
-        
-        {isLoading && <p>Loading...</p>}
-        {error && <p className="error">{error}</p>}
-        
-        {commands.length === 0 && !isLoading ? (
-          <p>No commands found. Create your first command using the form.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Owner</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {commands.map((command) => (
-                <tr key={command.id}>
-                  <td>{command.name}</td>
-                  <td>{command.user.ircIdentifier}</td>
-                  <td>{command.isActive ? 'Active' : 'Inactive'}</td>
-                  <td>
-                    <Button
-                      variant="secondary" 
-                      size="sm" 
-                      onClick={() => handleEdit(command)}
-                    >
-                      Edit
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={() => handleDelete(command.id)}
-                    >
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      // Update the command status to success after successful execution
+      setCommands((prevCommands: Command[]) => 
+        prevCommands.map((cmd: Command) => 
+          cmd.id === commandId ? { ...cmd, status: "success", lastRun: new Date().toLocaleDateString() } : cmd
+        )
+      )
       
-      <div className="command-form">
-        <h2>{editingCommand ? 'Edit Command' : 'Create New Command'}</h2>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="ircIdentifier">IRC Identifier</label>
-            <input
-              type="text"
-              id="ircIdentifier"
-              value={formIrcIdentifier}
-              onChange={(e) => setFormIrcIdentifier(e.target.value)}
-              required
-              disabled={!!editingCommand}
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="name">Command Name</label>
-            <input
-              type="text"
-              id="name"
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="code">Command Code</label>
-            <textarea
-              id="code"
-              rows={10}
-              value={formCode}
-              onChange={(e) => setFormCode(e.target.value)}
-              required
-              placeholder="// Enter your JavaScript code here
-// Use env.PARAMS.argument to access arguments passed to the command
-// Example:
-export default `Command result: ${env.PARAMS.argument}`;"
-            />
-          </div>
-          
-          {editingCommand && (
-            <div className="form-group checkbox">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={formIsActive}
-                  onChange={(e) => setFormIsActive(e.target.checked)}
-                />
-                Active
-              </label>
-            </div>
-          )}
-          
-          <div className="form-actions">
-            <Button type="submit" disabled={isLoading}>
-              {editingCommand ? 'Update Command' : 'Create Command'}
-            </Button>
-            
-            {editingCommand && (
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={resetForm} 
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-            )}
-          </div>
-        </form>
+      toast({
+        title: "Success",
+        description: "Command executed successfully",
+      })
+    } catch (error) {
+      console.error("Error running command:", error)
+      
+      // Update the command status to failed after failed execution
+      setCommands((prevCommands: Command[]) => 
+        prevCommands.map((cmd: Command) => 
+          cmd.id === commandId ? { ...cmd, status: "failed" } : cmd
+        )
+      )
+      
+      toast({
+        title: "Error",
+        description: "Failed to run command",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDelete = async (commandId: number) => {
+    try {
+      const response = await fetch(`/api/commands/${commandId}`, {
+        method: "DELETE",
+      })
+      
+      if (!response.ok) {
+        throw new Error("Failed to delete command")
+      }
+      
+      // Remove the command from the list
+      setCommands(commands.filter((cmd: Command) => cmd.id !== commandId))
+      
+      toast({
+        title: "Success",
+        description: "Command deleted successfully",
+      })
+    } catch (error) {
+      console.error("Error deleting command:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete command",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "success":
+        return "bg-green-500/20 text-green-500 hover:bg-green-500/30"
+      case "failed":
+        return "bg-red-500/20 text-red-500 hover:bg-red-500/30"
+      case "running":
+        return "bg-blue-500/20 text-blue-500 hover:bg-blue-500/30"
+      case "disabled":
+        return "bg-gray-500/20 text-gray-500 hover:bg-gray-500/30"
+      default:
+        return "bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30"
+    }
+  }
+
+  return (
+    <div className="container mx-auto p-4 bg-background text-foreground min-h-screen">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Command List</h1>
+        <Button onClick={() => window.location.href = "/script-editor"}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Command
+        </Button>
       </div>
+
+      <Card className="bg-card">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-center">
+            <CardTitle>Available Commands</CardTitle>
+            <div className="relative w-64">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search commands..."
+                className="pl-8 bg-input"
+                value={searchQuery}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Command</TableHead>
+                  <TableHead className="hidden md:table-cell">Last Run</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCommands.length > 0 ? (
+                  filteredCommands.map((command: Command) => (
+                    <TableRow key={command.id}>
+                      <TableCell className="font-medium">{command.name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{command.lastRun}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getStatusColor(command.status || "idle")}>
+                          {command.status || "idle"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleRun(command.id)} title="Run command">
+                            <Play className="h-4 w-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(command.id)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(command.id)}
+                                className="text-red-500 focus:text-red-500"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center">
+                        <AlertCircle className="h-10 w-10 mb-2 text-muted-foreground" />
+                        {searchQuery ? (
+                          <>No commands found. Try a different search.</>
+                        ) : (
+                          <>No commands found. Create your first command by clicking "New Command".</>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
-  );
+  )
 } 
