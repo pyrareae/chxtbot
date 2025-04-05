@@ -5,7 +5,7 @@ const { runSandboxed } = await loadQuickJs()
 // the sandbox needs wrapped functions, so the docs claim
 const wrap = (fn: Function) => (...args: any) => fn(...args)
 
-export async function executeCode(code: String, params: object = {}): Promise<{ok: boolean, data: any}> {
+export async function executeCode(code: string, params: object = {}): Promise<{ok: boolean, data: any}> {
   const execOptions: SandboxOptions = {
     allowFetch: true,
     allowFs: false,
@@ -27,11 +27,25 @@ const dummyCode = `
 `
 
 export interface CommandRunnerRunParams {
-  name: String,
-  argument: String,
+  name: string,
+  argument: string,
 }
+
 export default class CommandRunner {
   async run({name, argument} : CommandRunnerRunParams) {
     return executeCode(dummyCode, {argument})
+  }
+  
+  async runScript(code: string, argument: string): Promise<string> {
+    try {
+      const result = await executeCode(code, { argument });
+      if (!result.ok) {
+        throw new Error("Script execution failed");
+      }
+      return result.data;
+    } catch (error) {
+      console.error("Error executing script:", error);
+      throw error;
+    }
   }
 }

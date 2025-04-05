@@ -7,21 +7,79 @@ body {
 }
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
+.header {
+  background-color: #2c3e50;
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.tabs {
+  display: flex;
+}
+
+.tabs button {
+  background: none;
+  border: none;
+  color: #ddd;
+  padding: 8px 15px;
+  margin-left: 5px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.tabs button.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-weight: bold;
+}
+
+/* Chat View Styles */
 .chat-container {
   display: flex;
-  height: 100vh;
+  flex: 1;
+  overflow: hidden;
 }
 
 .sidebar {
   width: 250px;
-  background-color: #2c3e50;
+  background-color: #34495e;
   color: white;
   padding: 15px;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+}
+
+.sidebar h3 {
+  margin: 15px 0 5px;
+  font-size: 1rem;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding-left: 15px;
+  margin: 5px 0;
+}
+
+.sidebar li {
+  padding: 5px 0;
 }
 
 .chat-area {
@@ -81,4 +139,145 @@ body {
 
 .input-area button:hover {
   background-color: #2980b9;
+}
+
+/* Commands View Styles */
+.commands-container {
+  display: flex;
+  flex: 1;
+  padding: 20px;
+  overflow: auto;
+}
+
+.commands-list {
+  flex: 1;
+  margin-right: 20px;
+}
+
+.command-form {
+  flex: 1;
+  background-color: white;
+  padding: 20px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.commands-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.commands-list th, .commands-list td {
+  text-align: left;
+  padding: 12px 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.commands-list th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+}
+
+.commands-list tr:last-child td {
+  border-bottom: none;
+}
+
+.commands-list button {
+  padding: 5px 10px;
+  margin-right: 5px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.commands-list button:hover {
+  background-color: #e0e0e0;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 150px;
+  font-family: monospace;
+}
+
+.form-group.checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.form-group.checkbox label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.form-group.checkbox input {
+  margin-right: 8px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  padding: 10px 15px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.form-actions button:hover {
+  background-color: #2980b9;
+}
+
+.form-actions button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.form-actions button[type="button"] {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.form-actions button[type="button"]:hover {
+  background-color: #d0d0d0;
+}
+
+p.error {
+  color: #e74c3c;
+  font-weight: 500;
+  padding: 10px;
+  background-color: #fadbd8;
+  border-radius: 4px;
+  margin: 15px 0;
 } 

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { ChatView } from './ChatView';
+import { CommandsView } from './CommandsView';
 
 interface ServerConnection {
   name: string;
@@ -16,6 +18,7 @@ interface Message {
 }
 
 export function App() {
+  const [activeTab, setActiveTab] = useState<'chat' | 'commands'>('chat');
   const [connections, setConnections] = useState<ServerConnection[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeServer, setActiveServer] = useState<string | null>(null);
@@ -95,75 +98,40 @@ export function App() {
   };
 
   return (
-    <div className="chat-container">
-      <div className="sidebar">
-        <h2>Servers</h2>
-        {connections.map((conn) => (
-          <div key={conn.name}>
-            <h3 
-              onClick={() => setActiveServer(conn.name)}
-              style={{ 
-                cursor: 'pointer', 
-                fontWeight: activeServer === conn.name ? 'bold' : 'normal',
-                color: conn.connected ? 'white' : '#ff9999'
-              }}
-            >
-              {conn.name} {!conn.connected && '(disconnected)'}
-            </h3>
-            {activeServer === conn.name && (
-              <ul>
-                {conn.channels.map((channel) => (
-                  <li 
-                    key={channel}
-                    onClick={() => setActiveChannel(channel)}
-                    style={{ 
-                      cursor: 'pointer', 
-                      fontWeight: activeChannel === channel ? 'bold' : 'normal' 
-                    }}
-                  >
-                    {channel}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="chat-area">
-        <div className="messages">
-          {activeServer && activeChannel ? (
-            messages.length > 0 ? (
-              messages.map((msg) => (
-                <div key={msg.id} className="message">
-                  <strong>{msg.sender}</strong> <small>{new Date(msg.timestamp).toLocaleTimeString()}</small>
-                  <div>{msg.content}</div>
-                </div>
-              ))
-            ) : (
-              <p>No messages in this channel yet.</p>
-            )
-          ) : (
-            <p>Select a server and channel to view messages.</p>
-          )}
-        </div>
-        
-        <div className="input-area">
-          <input
-            type="text"
-            value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
-            placeholder="Type a message..."
-            disabled={!activeServer || !activeChannel}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSendMessage();
-            }}
-          />
-          <button onClick={handleSendMessage} disabled={!activeServer || !activeChannel}>
-            Send
+    <div className="container">
+      <header className="header">
+        <h1>ChxtBox IRC Client</h1>
+        <div className="tabs">
+          <button 
+            className={activeTab === 'chat' ? 'active' : ''} 
+            onClick={() => setActiveTab('chat')}
+          >
+            Chat
+          </button>
+          <button 
+            className={activeTab === 'commands' ? 'active' : ''} 
+            onClick={() => setActiveTab('commands')}
+          >
+            Bot Commands
           </button>
         </div>
-      </div>
+      </header>
+
+      {activeTab === 'chat' ? (
+        <ChatView 
+          connections={connections}
+          messages={messages}
+          activeServer={activeServer}
+          activeChannel={activeChannel}
+          messageInput={messageInput}
+          setActiveServer={setActiveServer}
+          setActiveChannel={setActiveChannel}
+          setMessageInput={setMessageInput}
+          handleSendMessage={handleSendMessage}
+        />
+      ) : (
+        <CommandsView />
+      )}
     </div>
   );
 } 

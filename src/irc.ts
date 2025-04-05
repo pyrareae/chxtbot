@@ -2,21 +2,22 @@ import IRC from "irc-framework"
 import { pick } from "ramda"
 import { Server } from "./config";
 import CommandRunner from "./commandRunner";
+import { CommandRepository } from "./database";
 
 
 export interface MatchType {
-  type: String;
+  type: string;
   from_server: boolean;
-  nick: String;
-  ident: String;
-  hostname: String;
-  target: String;
+  nick: string;
+  ident: string;
+  hostname: string;
+  target: string;
   group: any;
-  message: String;
+  message: string;
   tags: {
-    time: String, account: String
+    time: string, account: string
   },
-  account: String;
+  account: string;
   batch: any;
   reply: Function;
 }
@@ -47,9 +48,9 @@ export default class ChxtIrc {
     this.client.on('debug', console.log)
     this.client.on('registered', () => {
       this.config.channels.forEach(channelName => {
-        const channel = this.client.channel(channelName)
+        const channel = this.client.channel(channelName as string)
         channel.join()
-        this.channels.set(channelName, { messages: [] });
+        this.channels.set(channelName as string, { messages: [] });
       });
     });
     
@@ -86,9 +87,32 @@ export default class ChxtIrc {
     const [fullMsg, prefix, command, argument] = params.message.match(this.matcher)
     console.log([fullMsg, prefix, command, argument])
 
-    const runner = new CommandRunner()
-    const {data} = await runner.run({name: command, argument})
-    params.reply(data)
+    try {
+      // First try to find a custom command in the database
+      const dbCommand = await CommandRepository.findByName(command);
+      
+      if (dbCommand) {
+        // Execute the custom command code
+        try {
+          const runner = new CommandRunner();
+          const result = await runner.runScript(dbCommand.code, argument);
+          params.reply(result || "Command executed successfully");
+          return;
+        } catch (error) {
+          console.error("Error executing custom command:", error);
+          params.reply(`Error executing custom command: ${error}`);
+          return;
+        }
+      }
+      
+      // Fall back to built-in commands
+      const runner = new CommandRunner();
+      const {data} = await runner.run({name: command, argument});
+      params.reply(data);
+    } catch (error) {
+      console.error("Error handling command:", error);
+      params.reply(`Error: ${error}`);
+    }
   }
   
   // Get messages for a specific channel
