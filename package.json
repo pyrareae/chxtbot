@@ -10,7 +10,10 @@
     "test": "mocha",
     "start": "bun --watch ./src/webserver.ts --watch=src/**/*.ts",
     "console": "bun ./src/console.js",
-    "dev": "start"
+    "dev": "start",
+    "add-user": "bun run src/cli/add-user.ts",
+    "list-users": "bun run src/cli/list-users.ts",
+    "auth-user": "bun run src/cli/auth-user.ts"
   },
   "keywords": [],
   "author": "",
