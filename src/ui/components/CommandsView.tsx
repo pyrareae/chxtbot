@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/shadcn/ui/table"
-import { Button } from "@/src/shadcn/ui/button"
-import { Input } from "@/src/shadcn/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/shadcn/ui/card"
-import { Badge } from "@/src/shadcn/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/ui/components/table"
+import { Button } from "@/src/ui/components/button"
+import { Input } from "@/src/ui/components/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/ui/components/card"
+import { Badge } from "@/src/ui/components/badge"
 import { Edit, Search, Plus, AlertCircle } from "lucide-react"
 import { toast } from "@/src/hooks/use-toast"
 

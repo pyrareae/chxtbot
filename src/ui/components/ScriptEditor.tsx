@@ -2,14 +2,25 @@
 
 import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
-import { Button } from "@/src/shadcn/ui/button";
-import { Input } from "@/src/shadcn/ui/input";
-import { Textarea } from "@/src/shadcn/ui/textarea";
-import { Label } from "@/src/shadcn/ui/label";
-import { Card, CardContent } from "@/src/shadcn/ui/card";
+import { Button } from "@/src/ui/components/button";
+import { Input } from "@/src/ui/components/input";
+import { Textarea } from "@/src/ui/components/textarea";
+import { Label } from "@/src/ui/components/label";
+import { Card, CardContent } from "@/src/ui/components/card";
 import { useMediaQuery } from "@/src/hooks/use-mobile";
-import { Terminal, Save, ArrowLeft } from "lucide-react";
+import { Terminal, Save, ArrowLeft, Trash2, Power } from "lucide-react";
 import { toast } from "@/src/hooks/use-toast";
+import { Switch } from "@/src/ui/components/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/src/ui/components/alert-dialog";
 
 interface Command {
   id: number;
@@ -37,6 +48,9 @@ export default function ScriptEditor() {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [testInput, setTestInput] = useState("");
   const [commandId, setCommandId] = useState<number | null>(null);
+  const [isActive, setIsActive] = useState(true);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get the command ID from the URL query parameters
   useEffect(() => {
@@ -60,6 +74,7 @@ export default function ScriptEditor() {
       setCommandName(data.name);
       setScriptContent(data.code || "// Write your script here\n");
       setDescription(data.description || "");
+      setIsActive(data.isActive);
     } catch (error) {
       console.error("Error fetching command:", error);
       toast({
@@ -97,7 +112,7 @@ export default function ScriptEditor() {
           name: commandName,
           code: scriptContent,
           description,
-          isActive: true,
+          isActive,
           userId: 1, // Default user ID
         }),
       });
@@ -177,6 +192,40 @@ export default function ScriptEditor() {
       );
     } finally {
       setIsTestLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!commandId) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      const response = await fetch(`/api/commands/${commandId}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to delete command");
+      }
+      
+      toast({
+        title: "Success",
+        description: "Command deleted successfully",
+      });
+      
+      // Navigate back to command list
+      window.location.href = "/commands";
+    } catch (error) {
+      console.error("Error deleting command:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete command",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -302,9 +351,58 @@ export default function ScriptEditor() {
             >
               {isSaving ? "Saving..." : "Save Script"}
             </Button>
+            
+            {/* Enable/Disable and Delete buttons */}
+            {commandId && (
+              <div className="flex items-center justify-between mt-4">
+                <Button
+                  variant="outline"
+                  className="border-red-500 text-red-500 hover:bg-red-500/10"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="script-active"
+                    checked={isActive}
+                    onCheckedChange={(checked: boolean) => setIsActive(checked)}
+                  />
+                  <Label htmlFor="script-active" className="cursor-pointer">
+                    {isActive ? "Enabled" : "Disabled"}
+                  </Label>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="bg-[#222] border-0 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              This will permanently delete the script "{commandName}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-[#333] text-white border-0 hover:bg-[#444]">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
