@@ -1,5 +1,23 @@
 import { type SandboxOptions, loadQuickJs } from "@sebastianwessel/quickjs"
 import { CommandRepository } from "./database/repository/CommandRepository"
+import { GoogleGenAI } from "@google/genai"
+import config from "./config";
+
+const askAi = async (prompt: string) => {
+  const apiKey = config.api_keys?.gemini;
+  if (!apiKey) {
+    console.error("API key from config:", config.api_keys);
+    throw new Error("Gemini API key not configured or not loaded properly. Check your config.toml file.");
+  }
+
+  const genAI = new GoogleGenAI({apiKey});
+
+  const result = await genAI.models.generateContent({
+    model: "gemini-2.0-flash",
+    contents: prompt
+  });
+  return result.text;
+}
 
 const { runSandboxed } = await loadQuickJs()
 
@@ -12,7 +30,8 @@ export async function executeCode(code: string, params: object = {}): Promise<{o
     allowFs: false,
     env: {
       CHXT: {
-        log: wrap(console.log)
+        log: wrap(console.log),
+        askAi: wrap(askAi)
       },
       PARAMS: params
     }
@@ -55,11 +74,12 @@ export default class CommandRunner {
       
       // Wrap user code with our template
       const wrappedCode = `
+const { askAi, log } = env.CHXT;
 // Original command code
 ${code}
 
 // Execute command and export result
-export default run(env.PARAMS.argument);
+export default await run(env.PARAMS.argument);
 `;
       
       console.log("Final script code:", wrappedCode);

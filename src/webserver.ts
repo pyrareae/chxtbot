@@ -484,8 +484,6 @@ async function generateCodeWithAI(code: string, prompt: string): Promise<string>
       throw new Error("Gemini API key not configured or not loaded properly. Check your config.toml file.");
     }
     
-    console.log("Using Gemini API with key:", apiKey.substring(0, 10) + "...");
-    
     // Initialize the Gemini API
     const genAI = new GoogleGenAI({apiKey});
     
@@ -499,6 +497,7 @@ CONTEXT:
 - The script should export a 'run' function that takes an argument and returns a string.
 - Available APIs: You can use standard JavaScript functions and Node.js built-ins.
 - You can make HTTP requests with fetch().
+- There is an async askAi function that can be used to prompt an LLM.
 - The command will run in a sandboxed environment.
 
 RULES:
@@ -521,7 +520,7 @@ IMPORTANT: Respond ONLY with the complete JavaScript code and nothing else.
     // Generate content with Gemini
     // const result = await model.generateContent(systemPrompt);
     const result = await genAI.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-pro-preview-03-25",
         contents: systemPrompt
     });
     // const response = result.response;
