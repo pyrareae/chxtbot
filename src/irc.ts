@@ -36,7 +36,7 @@ export default class ChxtIrc {
   matcher: RegExp;
 
   constructor(con: Server) {
-    this.matcher = new RegExp(`^(${con.commandPrefix})(\\w+) +(.*)`)
+    this.matcher = new RegExp(`^(${con.commandPrefix})(\\w+)(?:\\s+(.*))?$`)
     this.config = con
     const conf = {
       ...pick(['nick', 'username', 'encoding', 'version', 'port', 'host', 'channels'], con),
@@ -83,8 +83,9 @@ export default class ChxtIrc {
   async handleCommand(params: MatchType) {
     console.log("MATCH")
     console.log(params)
+    
     //@ts-ignore
-    const [fullMsg, prefix, command, argument] = params.message.match(this.matcher)
+    const [fullMsg, prefix, command, argument = ''] = params.message.match(this.matcher)
     console.log([fullMsg, prefix, command, argument])
 
     // Handle special dash command for authentication
