@@ -487,7 +487,7 @@ async function generateCodeWithAI(code: string, prompt: string): Promise<string>
     console.log("Using Gemini API with key:", apiKey.substring(0, 10) + "...");
     
     // Initialize the Gemini API
-    const genAI = new GoogleGenAI(apiKey);
+    const genAI = new GoogleGenAI({apiKey});
     
     // Create a detailed prompt for the AI
     const systemPrompt = `
