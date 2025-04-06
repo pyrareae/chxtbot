@@ -24,11 +24,8 @@ const AuthPage = () => {
         if (response.ok && data.success) {
           setStatus('success');
           setMessage('Authentication successful! Redirecting to dashboard...');
-          
-          // Redirect to dashboard after 2 seconds
-          setTimeout(() => {
-            navigate('/');
-          }, 2000);
+        
+          navigate('/');
         } else {
           setStatus('error');
           setMessage(data.error || 'Authentication failed. Please try again.');
