@@ -35,7 +35,14 @@ const ProtectedRoute = () => {
 
   // If not authenticated, redirect to home page
   if (!isAuthenticated) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="border-1 text-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
+          <p className="text-gray-200">You are not authenticated. Please log in to access this page.</p>
+        </div>
+      </div>
+    );
   }
 
   // If authenticated, render the child routes
