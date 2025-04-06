@@ -319,7 +319,7 @@ export default function ScriptEditor() {
             </Label>
             <div
               className="rounded-md overflow-hidden"
-              style={{ height: "400px" }}
+              style={{ height: "800px" }}
             >
               <Editor
                 height="100%"
@@ -336,11 +336,7 @@ export default function ScriptEditor() {
                   tabSize: 2,
                   lineNumbers: "on",
                   lineDecorationsWidth: 0,
-                  renderLineHighlight: "all",
-                  scrollbar: {
-                    vertical: "hidden",
-                    horizontal: "hidden",
-                  },
+                  renderLineHighlight: "all"
                 }}
               />
             </div>
