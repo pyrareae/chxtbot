@@ -15,6 +15,7 @@ interface Command {
   id: number
   name: string
   code: string
+  description?: string
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -53,6 +54,7 @@ export default function ScriptEditor() {
       setCommandId(data.id)
       setCommandName(data.name)
       setScriptContent(data.code || "// Write your script here\n")
+      setDescription(data.description || "")
     } catch (error) {
       console.error("Error fetching command:", error)
       toast({
@@ -89,7 +91,9 @@ export default function ScriptEditor() {
         body: JSON.stringify({
           name: commandName,
           code: scriptContent,
+          description,
           isActive: true,
+          userId: 1 // Default user ID
         }),
       })
       

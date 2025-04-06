@@ -80,7 +80,8 @@ const initializeApp = async () => {
             const command = await CommandRepository.createCommand(
               user,
               body.name,
-              body.code
+              body.code,
+              body.description
             );
             
             return Response.json(command);
@@ -141,7 +142,8 @@ const initializeApp = async () => {
               commandId,
               body.name,
               body.code,
-              body.isActive
+              body.isActive,
+              body.description
             );
             
             if (!updatedCommand) {

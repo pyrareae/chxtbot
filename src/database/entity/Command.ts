@@ -11,6 +11,9 @@ export class Command {
   @Column("text")
   code: string;
 
+  @Column({ type: "text", nullable: true })
+  description: string;
+
   @Column({ default: true })
   isActive: boolean;
 

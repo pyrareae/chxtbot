@@ -18,10 +18,11 @@ export const CommandRepository = AppDataSource.getRepository(Command).extend({
     });
   },
 
-  async createCommand(user: User, name: string, code: string): Promise<Command> {
+  async createCommand(user: User, name: string, code: string, description?: string): Promise<Command> {
     const command = this.create({
       name,
       code,
+      description,
       user,
       userId: user.id
     });
@@ -29,7 +30,7 @@ export const CommandRepository = AppDataSource.getRepository(Command).extend({
     return this.save(command);
   },
 
-  async updateCommand(id: number, name: string, code: string, isActive: boolean): Promise<Command | null> {
+  async updateCommand(id: number, name: string, code: string, isActive: boolean, description?: string): Promise<Command | null> {
     const command = await this.findOne({ where: { id } });
     
     if (!command) {
@@ -39,6 +40,10 @@ export const CommandRepository = AppDataSource.getRepository(Command).extend({
     command.name = name;
     command.code = code;
     command.isActive = isActive;
+    
+    if (description !== undefined) {
+      command.description = description;
+    }
     
     return this.save(command);
   },
