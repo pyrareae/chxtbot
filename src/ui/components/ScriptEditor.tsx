@@ -21,10 +21,13 @@ interface Command {
   updatedAt: string;
 }
 
+const template =
+`function run(arg) {
+  return "Hello World"
+}`
+
 export default function ScriptEditor() {
-  const [scriptContent, setScriptContent] = useState(
-    "// Write your script here\n"
-  );
+  const [scriptContent, setScriptContent] = useState(template);
   const [commandName, setCommandName] = useState("");
   const [description, setDescription] = useState("");
   const [testResult, setTestResult] = useState<string | null>(null);
