@@ -2,7 +2,7 @@ import IRC from "irc-framework"
 import { pick } from "ramda"
 import { Server } from "./config";
 import CommandRunner from "./commandRunner";
-import { CommandRepository, UserRepository } from "./database";
+import { CommandRepository, UserRepository, AppDataSource, Command } from "./database";
 
 
 export interface MatchType {
@@ -76,6 +76,20 @@ export default class ChxtIrc {
       }
     });
     
+    // Add listener for channel invitations
+    this.client.on('invite', (event: { channel: string; nick: string }) => {
+      const { channel, nick } = event;
+      console.log(`Received invitation from ${nick} to join ${channel}`);
+      
+      // Join the channel
+      this.client.join(channel);
+      
+      // Initialize channel tracking
+      if (!this.channels.has(channel)) {
+        this.channels.set(channel, { messages: [] });
+      }
+    });
+    
     this.client.match(this.matcher, this.handleCommand.bind(this))
     this.client.connect()
   }
@@ -91,6 +105,11 @@ export default class ChxtIrc {
     // Handle special dash command for authentication
     if (command === "dash") {
       return await this.handleDashCommand(params);
+    }
+
+    // Handle help command
+    if (command === "help") {
+      return await this.handleHelpCommand(params);
     }
 
     try {
@@ -161,6 +180,49 @@ export default class ChxtIrc {
       console.error("Error handling dash command:", error);
       params.reply("Error processing your request. Please try again later.");
     }
+  }
+  
+  /**
+   * Handle the help command which lists all available commands
+   */
+  async handleHelpCommand(params: MatchType) {
+    try {
+      // Get all custom commands from the database
+      const customCommands = await this.getAllCustomCommands();
+      
+      // Built-in commands list
+      const builtInCommands = ["dash", "help"];
+      
+      // Generate the help message
+      let helpMessage = "Available commands:\n";
+      
+      // Add built-in commands
+      helpMessage += "Built-in commands: " + builtInCommands.map(cmd => this.config.commandPrefix + cmd).join(", ");
+      
+      // Add custom commands if any exist
+      if (customCommands && customCommands.length > 0) {
+        helpMessage += "\nCustom commands: " + customCommands.map((cmd: { name: string }) => this.config.commandPrefix + cmd.name).join(", ");
+      }
+      
+      // Send the help message
+      params.reply(helpMessage);
+      
+    } catch (error) {
+      console.error("Error handling help command:", error);
+      params.reply("Error processing your request. Please try again later.");
+    }
+  }
+  
+  /**
+   * Get all custom commands from the database
+   */
+  private async getAllCustomCommands() {
+    // Use the AppDataSource to get all commands
+    return await AppDataSource.getRepository(Command)
+      .createQueryBuilder("command")
+      .where("command.isActive = :isActive", { isActive: true })
+      .orderBy("command.name", "ASC")
+      .getMany();
   }
   
   // Get messages for a specific channel
