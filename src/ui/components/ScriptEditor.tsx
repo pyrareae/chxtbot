@@ -8,7 +8,7 @@ import { Textarea } from "@/src/ui/components/textarea";
 import { Label } from "@/src/ui/components/label";
 import { Card, CardContent } from "@/src/ui/components/card";
 import { useMediaQuery } from "@/src/hooks/use-mobile";
-import { Terminal, Save, ArrowLeft, Trash2, Power, Sparkles } from "lucide-react";
+import { Terminal, Save, ArrowLeft, Trash2, Power, Sparkles, ChevronDown } from "lucide-react";
 import { toast } from "@/src/hooks/use-toast";
 import { Switch } from "@/src/ui/components/switch";
 import {
@@ -53,6 +53,7 @@ export default function ScriptEditor() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [aiSectionExpanded, setAiSectionExpanded] = useState(false);
 
   // Get the command ID from the URL query parameters
   useEffect(() => {
@@ -375,26 +376,40 @@ export default function ScriptEditor() {
             
             {/* AI Code Generation Section */}
             <div className="space-y-2 mt-6 rounded-md">
-              <Label htmlFor="ai-prompt" className="flex items-center">
-                Edit with AI
-              </Label>
-              <Textarea
-                id="ai-prompt"
-                placeholder="Describe what you want the AI to do with your code..."
-                className="min-h-[80px] resize-none bg-[#222] border-0 text-white placeholder-gray-500"
-                value={aiPrompt}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  setAiPrompt(e.target.value)
-                }
-              />
-              <Button
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                onClick={handleAiGenerate}
-                disabled={isGeneratingCode}
+              <Label 
+                htmlFor="ai-prompt" 
+                className="flex items-center cursor-pointer"
+                onClick={() => setAiSectionExpanded(!aiSectionExpanded)}
               >
-                <Sparkles className="mr-2 h-4 w-4" />
-                {isGeneratingCode ? "Generating..." : "Generate Code"}
-              </Button>
+                <div className="flex items-center justify-between w-full">
+                  <span className="flex items-center">Edit with AI</span>
+                  <ChevronDown 
+                    className={`h-4 w-4 transition-transform duration-200 ${aiSectionExpanded ? 'rotate-0' : '-rotate-90'}`} 
+                  />
+                </div>
+              </Label>
+              
+              {aiSectionExpanded && (
+                <div className="transition-all duration-200">
+                  <Textarea
+                    id="ai-prompt"
+                    placeholder="Describe what you want the AI to do with your code..."
+                    className="min-h-[80px] resize-none bg-[#222] border-0 text-white placeholder-gray-500"
+                    value={aiPrompt}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      setAiPrompt(e.target.value)
+                    }
+                  />
+                  <Button
+                    className="w-full mt-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    onClick={handleAiGenerate}
+                    disabled={isGeneratingCode}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    {isGeneratingCode ? "Generating..." : "Generate Code"}
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Test Section */}
