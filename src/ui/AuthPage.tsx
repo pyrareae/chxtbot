@@ -27,7 +27,7 @@ const AuthPage = () => {
           
           // Redirect to dashboard after 2 seconds
           setTimeout(() => {
-            navigate('/dashboard');
+            navigate('/');
           }, 2000);
         } else {
           setStatus('error');
