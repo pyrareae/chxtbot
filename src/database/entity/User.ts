@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -7,6 +7,24 @@ export class User {
 
   @Column({ unique: true })
   ircIdentifier: string;
+  
+  @Column({ nullable: true })
+  hostmask: string;
+  
+  @Column({ nullable: true })
+  authToken: string;
+  
+  @Column({ nullable: true })
+  authTokenExpiry: Date;
+  
+  @Column({ default: false })
+  isAuthenticated: boolean;
+  
+  @CreateDateColumn()
+  createdAt: Date;
+  
+  @UpdateDateColumn()
+  updatedAt: Date;
 
   @OneToMany("Command", "user")
   commands: any[];

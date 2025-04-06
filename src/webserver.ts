@@ -36,9 +36,116 @@ const initializeApp = async () => {
         }
       },
       
+      // Authentication endpoint to verify tokens
+      "/api/auth/verify": {
+        async GET(req) {
+          const url = new URL(req.url);
+          const token = url.searchParams.get("token");
+          
+          if (!token) {
+            return Response.json({ error: "Token is required" }, { status: 400 });
+          }
+          
+          try {
+            const user = await UserRepository.verifyAuthToken(token);
+            
+            if (!user) {
+              return Response.json({ error: "Invalid or expired token" }, { status: 401 });
+            }
+            
+            // Authenticate the user
+            await UserRepository.authenticateUser(user);
+            
+            // Set a session cookie
+            const headers = new Headers();
+            const sessionId = crypto.randomUUID();
+            headers.append("Set-Cookie", `session=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`);
+            
+            // Store session in memory (in a real app, use Redis or similar)
+            sessions.set(sessionId, { userId: user.id, authenticated: true });
+            
+            return new Response(JSON.stringify({ 
+              success: true, 
+              user: { 
+                id: user.id, 
+                ircIdentifier: user.ircIdentifier 
+              } 
+            }), { 
+              headers,
+              status: 200 
+            });
+          } catch (error) {
+            console.error("Token verification error:", error);
+            return Response.json({ error: "Authentication failed" }, { status: 500 });
+          }
+        }
+      },
+      
+      // Check current session
+      "/api/auth/session": {
+        async GET(req) {
+          try {
+            const sessionId = getSessionFromCookie(req);
+            
+            if (!sessionId) {
+              return Response.json({ authenticated: false }, { status: 401 });
+            }
+            
+            const session = sessions.get(sessionId);
+            
+            if (!session || !session.authenticated) {
+              return Response.json({ authenticated: false }, { status: 401 });
+            }
+            
+            const user = await UserRepository.findOne({ where: { id: session.userId } });
+            
+            if (!user) {
+              // Clear invalid session
+              sessions.delete(sessionId);
+              return Response.json({ authenticated: false }, { status: 401 });
+            }
+            
+            return Response.json({ 
+              authenticated: true, 
+              user: { 
+                id: user.id, 
+                ircIdentifier: user.ircIdentifier 
+              } 
+            });
+          } catch (error) {
+            console.error("Session check error:", error);
+            return Response.json({ error: "Session check failed" }, { status: 500 });
+          }
+        }
+      },
+      
+      // Logout endpoint
+      "/api/auth/logout": {
+        POST(req) {
+          const sessionId = getSessionFromCookie(req);
+          
+          if (sessionId) {
+            sessions.delete(sessionId);
+          }
+          
+          const headers = new Headers();
+          headers.append("Set-Cookie", "session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
+          
+          return new Response(JSON.stringify({ success: true }), { 
+            headers,
+            status: 200 
+          });
+        }
+      },
+      
       // Users API
       "/api/users": {
-        async GET() {
+        async GET(req) {
+          // Check authentication
+          if (!isAuthenticated(req)) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+          
           const users = await UserRepository.find();
           return Response.json(users);
         }
@@ -46,7 +153,12 @@ const initializeApp = async () => {
       
       // Commands API
       "/api/commands": {
-        GET: async () => {
+        GET: async (req) => {
+          // Check authentication
+          if (!isAuthenticated(req)) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+          
           try {
             const commands = await CommandRepository.find({
               relations: ["user"],
@@ -59,6 +171,11 @@ const initializeApp = async () => {
           }
         },
         POST: async (req) => {
+          // Check authentication
+          if (!isAuthenticated(req)) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+          
           try {
             const body = await req.json();
             
@@ -95,6 +212,11 @@ const initializeApp = async () => {
       // Individual command route
       "/api/commands/:id": {
         GET: async (req) => {
+          // Check authentication
+          if (!isAuthenticated(req)) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+          
           try {
             const { id } = req.params;
             const commandId = parseInt(id);
@@ -119,6 +241,11 @@ const initializeApp = async () => {
           }
         },
         PUT: async (req) => {
+          // Check authentication
+          if (!isAuthenticated(req)) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+          
           try {
             const { id } = req.params;
             const commandId = parseInt(id);
@@ -157,6 +284,11 @@ const initializeApp = async () => {
           }
         },
         DELETE: async (req) => {
+          // Check authentication
+          if (!isAuthenticated(req)) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+          
           try {
             const { id } = req.params;
             const commandId = parseInt(id);
@@ -182,6 +314,11 @@ const initializeApp = async () => {
       // Command run route
       "/api/commands/:id/run": {
         POST: async (req) => {
+          // Check authentication
+          if (!isAuthenticated(req)) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+          
           try {
             const { id } = req.params;
             const commandId = parseInt(id);
@@ -239,6 +376,11 @@ const initializeApp = async () => {
       // Command test route
       "/api/commands/test": {
         POST: async (req) => {
+          // Check authentication
+          if (!isAuthenticated(req)) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+          
           try {
             const body = await req.json();
             
@@ -276,6 +418,27 @@ const initializeApp = async () => {
 
   console.log(`Server running at ${server.url}`);
 };
+
+// Session storage (in a real app, use Redis or similar)
+const sessions = new Map();
+
+// Helper function to get session ID from cookie
+function getSessionFromCookie(req) {
+  const cookies = req.headers.get("cookie");
+  if (!cookies) return null;
+  
+  const sessionMatch = cookies.match(/session=([^;]+)/);
+  return sessionMatch ? sessionMatch[1] : null;
+}
+
+// Helper function to check if request is authenticated
+function isAuthenticated(req) {
+  const sessionId = getSessionFromCookie(req);
+  if (!sessionId) return false;
+  
+  const session = sessions.get(sessionId);
+  return session && session.authenticated;
+}
 
 // Start application
 initializeApp().catch(error => {

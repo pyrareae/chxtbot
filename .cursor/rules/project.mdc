@@ -7,3 +7,4 @@ alwaysApply: true
 
 - This project uses bun, as a fullstack server and bundler. https://bun.sh/docs/bundler/fullstack
 - This project is an irc utility chatbot. It has a webui for managing command scripts
+- Run the server with `bun start` this is configured to automatically reload on source changes so you usually don't need to restart the server.

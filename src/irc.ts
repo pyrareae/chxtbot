@@ -2,7 +2,7 @@ import IRC from "irc-framework"
 import { pick } from "ramda"
 import { Server } from "./config";
 import CommandRunner from "./commandRunner";
-import { CommandRepository } from "./database";
+import { CommandRepository, UserRepository } from "./database";
 
 
 export interface MatchType {
@@ -87,6 +87,11 @@ export default class ChxtIrc {
     const [fullMsg, prefix, command, argument] = params.message.match(this.matcher)
     console.log([fullMsg, prefix, command, argument])
 
+    // Handle special dash command for authentication
+    if (command === "dash") {
+      return await this.handleDashCommand(params);
+    }
+
     try {
       // First try to find a custom command in the database
       const dbCommand = await CommandRepository.findByName(command);
@@ -112,6 +117,54 @@ export default class ChxtIrc {
     } catch (error) {
       console.error("Error handling command:", error);
       params.reply(`Error: ${error}`);
+    }
+  }
+  
+  /**
+   * Handle the dash command which provides access to the dashboard
+   */
+  async handleDashCommand(params: MatchType) {
+    try {
+      const { nick, ident, hostname, account } = params;
+      console.log(`Dash command from ${nick}, hostmask: ${ident}@${hostname}, account: ${account}`);
+      
+      // Build hostmask for identification
+      const hostmask = `${nick}!${ident}@${hostname}`;
+      
+      // Check if user is authenticated with the IRC server
+      if (!account) {
+        params.reply("You must be authenticated with the IRC server to use the dashboard.");
+        return;
+      }
+      
+      // Find user by IRC identifier (account name)
+      let user = await UserRepository.findByIrcIdentifier(account);
+      
+      if (!user) {
+        params.reply("You don't have access to the dashboard. Please contact an administrator.");
+        return;
+      }
+      
+      // Update user's hostmask for future reference
+      await UserRepository.updateHostmask(user, hostmask);
+      
+      // Generate authentication token
+      const token = await UserRepository.generateAuthToken(user);
+      
+      // Create magic link
+      const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+      const magicLink = `${baseUrl}/auth?token=${token}`;
+      
+      // Send DM with magic link
+      this.sendDirectMessage(nick, `Click this link to access the dashboard: ${magicLink}`);
+      this.sendDirectMessage(nick, "This link will expire in 24 hours.");
+      
+      // Respond in channel with a generic message
+      params.reply("Check your private messages for dashboard access instructions.");
+      
+    } catch (error) {
+      console.error("Error handling dash command:", error);
+      params.reply("Error processing your request. Please try again later.");
     }
   }
   
@@ -146,5 +199,20 @@ export default class ChxtIrc {
     }
     
     return true;
+  }
+  
+  // Send a direct message to a user
+  sendDirectMessage(nickname: string, message: string): boolean {
+    if (!this.client.connected) {
+      return false;
+    }
+    
+    try {
+      this.client.say(nickname, message);
+      return true;
+    } catch (error) {
+      console.error(`Error sending DM to ${nickname}:`, error);
+      return false;
+    }
   }
 }

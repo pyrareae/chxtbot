@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import CommandsView from './components/CommandsView';
 import ScriptEditor from './components/ScriptEditor';
 import { ThemeProvider } from './components/theme-provider';
+import AuthPage from './AuthPage';
+import ProtectedRoute from './ProtectedRoute';
 
 import './styles.css';
 
@@ -13,9 +15,15 @@ function App() {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<CommandsView />} />
-          <Route path="/commands" element={<CommandsView />} />
-          <Route path="/script-editor" element={<ScriptEditor />} />
+          {/* Public routes */}
+          <Route path="/auth" element={<AuthPage />} />
+          
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<CommandsView />} />
+            <Route path="/commands" element={<CommandsView />} />
+            <Route path="/script-editor" element={<ScriptEditor />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
