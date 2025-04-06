@@ -93,8 +93,9 @@ const initializeApp = async () => {
       
       // Individual command route
       "/api/commands/:id": {
-        GET: async (req, { id }) => {
+        GET: async (req) => {
           try {
+            const { id } = req.params;
             const commandId = parseInt(id);
             
             if (isNaN(commandId)) {
@@ -116,8 +117,9 @@ const initializeApp = async () => {
             return Response.json({ error: "Failed to fetch command" }, { status: 500 });
           }
         },
-        PUT: async (req, { id }) => {
+        PUT: async (req) => {
           try {
+            const { id } = req.params;
             const commandId = parseInt(id);
             
             if (isNaN(commandId)) {
@@ -152,8 +154,9 @@ const initializeApp = async () => {
             return Response.json({ error: "Failed to update command" }, { status: 500 });
           }
         },
-        DELETE: async (req, { id }) => {
+        DELETE: async (req) => {
           try {
+            const { id } = req.params;
             const commandId = parseInt(id);
             
             if (isNaN(commandId)) {
@@ -176,8 +179,9 @@ const initializeApp = async () => {
       
       // Command run route
       "/api/commands/:id/run": {
-        POST: async (req, { id }) => {
+        POST: async (req) => {
           try {
+            const { id } = req.params;
             const commandId = parseInt(id);
             
             if (isNaN(commandId)) {
