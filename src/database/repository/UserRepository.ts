@@ -3,23 +3,19 @@ import { User } from "../entity/User";
 import crypto from "crypto";
 
 export const UserRepository = AppDataSource.getRepository(User).extend({
-  async findByIrcIdentifier(ircIdentifier: string): Promise<User | null> {
-    return this.findOne({ where: { ircIdentifier } });
+  async findByIrcAccount(ircAccount: string): Promise<User | null> {
+    return this.findOne({ where: { ircAccount } });
   },
 
-  async findOrCreate(ircIdentifier: string): Promise<User> {
-    let user = await this.findByIrcIdentifier(ircIdentifier);
+  async findOrCreate(ircAccount: string): Promise<User> {
+    let user = await this.findByIrcAccount(ircAccount);
     
     if (!user) {
-      user = this.create({ ircIdentifier });
+      user = this.create({ ircAccount });
       await this.save(user);
     }
     
     return user;
-  },
-  
-  async findByHostmask(hostmask: string): Promise<User | null> {
-    return this.findOne({ where: { hostmask } });
   },
   
   async generateAuthToken(user: User): Promise<string> {
@@ -59,12 +55,6 @@ export const UserRepository = AppDataSource.getRepository(User).extend({
     user.isAuthenticated = true;
     user.authToken = undefined;
     user.authTokenExpiry = undefined;
-    await this.save(user);
-    return user;
-  },
-  
-  async updateHostmask(user: User, hostmask: string): Promise<User> {
-    user.hostmask = hostmask;
     await this.save(user);
     return user;
   }

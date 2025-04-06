@@ -20,20 +20,19 @@ async function listUsers() {
     }
 
     console.log(`Found ${users.length} users:`);
-    console.log("---------------------------------------------------");
-    console.log("ID | IRC Identifier       | Hostmask              | Auth");
-    console.log("---------------------------------------------------");
+    console.log("-------------------------------------------");
+    console.log("ID | IRC Account           | Authenticated");
+    console.log("-------------------------------------------");
 
     for (const user of users) {
       const id = user.id.toString().padEnd(3);
-      const ircId = (user.ircIdentifier || "").padEnd(20);
-      const hostmask = (user.hostmask || "").padEnd(20);
+      const ircAccount = (user.ircAccount || "").padEnd(20);
       const auth = user.isAuthenticated ? "Yes" : "No";
       
-      console.log(`${id}| ${ircId} | ${hostmask} | ${auth}`);
+      console.log(`${id}| ${ircAccount} | ${auth}`);
     }
     
-    console.log("---------------------------------------------------");
+    console.log("-------------------------------------------");
 
   } catch (error) {
     console.error("Error listing users:", error);

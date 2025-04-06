@@ -68,7 +68,7 @@ const initializeApp = async () => {
               success: true, 
               user: { 
                 id: user.id, 
-                ircIdentifier: user.ircIdentifier 
+                ircAccount: user.ircAccount 
               } 
             }), { 
               headers,
@@ -109,7 +109,7 @@ const initializeApp = async () => {
               authenticated: true, 
               user: { 
                 id: user.id, 
-                ircIdentifier: user.ircIdentifier 
+                ircAccount: user.ircAccount 
               } 
             });
           } catch (error) {

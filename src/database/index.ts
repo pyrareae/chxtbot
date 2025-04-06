@@ -4,7 +4,7 @@ import { Command } from "./entity/Command";
 import { UserRepository } from "./repository/UserRepository";
 import { CommandRepository } from "./repository/CommandRepository";
 import { addDescriptionColumn } from "./migration/add-description";
-import { addAuthFields } from "./migration/add-auth-fields";
+import { updateUserFields } from "./migration/update-user-fields";
 
 /**
  * Initialize the database connection and run necessary migrations
@@ -16,7 +16,7 @@ export async function initializeDatabase() {
     
     // Run migrations
     await addDescriptionColumn();
-    await addAuthFields();
+    await updateUserFields();
     
     return true;
   } catch (error) {

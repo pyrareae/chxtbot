@@ -126,28 +126,22 @@ export default class ChxtIrc {
    */
   async handleDashCommand(params: MatchType) {
     try {
-      const { nick, ident, hostname, account } = params;
-      console.log(`Dash command from ${nick}, hostmask: ${ident}@${hostname}, account: ${account}`);
-      
-      // Build hostmask for identification
-      const hostmask = `${nick}!${ident}@${hostname}`;
+      const { nick, account } = params;
+      console.log(`Dash command from ${nick}, IRC account: ${account}`);
       
       // Check if user is authenticated with the IRC server
       if (!account) {
-        params.reply("You must be authenticated with the IRC server to use the dashboard.");
+        params.reply("You must be authenticated with the IRC server to use the dashboard. Please register your nickname with IRC services.");
         return;
       }
       
-      // Find user by IRC identifier (account name)
-      let user = await UserRepository.findByIrcIdentifier(account);
+      // Find user by IRC account name
+      let user = await UserRepository.findByIrcAccount(account);
       
       if (!user) {
         params.reply("You don't have access to the dashboard. Please contact an administrator.");
         return;
       }
-      
-      // Update user's hostmask for future reference
-      await UserRepository.updateHostmask(user, hostmask);
       
       // Generate authentication token
       const token = await UserRepository.generateAuthToken(user);

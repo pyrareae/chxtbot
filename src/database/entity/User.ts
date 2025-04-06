@@ -6,10 +6,7 @@ export class User {
   id: number;
 
   @Column({ unique: true })
-  ircIdentifier: string;
-  
-  @Column({ nullable: true })
-  hostmask: string;
+  ircAccount: string;
   
   @Column({ nullable: true })
   authToken: string;
