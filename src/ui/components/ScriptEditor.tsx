@@ -374,9 +374,8 @@ export default function ScriptEditor() {
             </div>
             
             {/* AI Code Generation Section */}
-            <div className="space-y-2 mt-6 p-4 border border-blue-500/30 rounded-md bg-[#111]">
+            <div className="space-y-2 mt-6 rounded-md">
               <Label htmlFor="ai-prompt" className="flex items-center">
-                <Sparkles className="h-4 w-4 mr-2 text-yellow-400" />
                 Edit with AI
               </Label>
               <Textarea
