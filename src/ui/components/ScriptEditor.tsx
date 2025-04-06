@@ -239,7 +239,16 @@ export default function ScriptEditor() {
 
   return (
     <div className="container mx-auto p-4 min-h-screen bg-black text-white">
-      <h1 className="text-3xl font-bold text-blue-400 mb-6">Script Manager</h1>
+      <div className="flex gap-4 mb-4">
+        <Button
+          variant="outline"
+          className="hover:bg-gray-800"
+          onClick={() => window.location.href = "/"}
+        >
+          <ArrowLeft className="h-5 w-5" /> Back
+        </Button>
+        <h1 className="text-3xl font-bold text-blue-400">Edit Command</h1>
+      </div>
 
       <Card className="bg-black border shadow-none">
         <CardContent
@@ -354,16 +363,7 @@ export default function ScriptEditor() {
             
             {/* Enable/Disable and Delete buttons */}
             {commandId && (
-              <div className="flex items-center justify-between mt-4">
-                <Button
-                  variant="outline"
-                  className="border-red-500 text-red-500 hover:bg-red-500/10"
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-
+              <div className="flex items-center justify-end gap-2 mt-4">
                 <div className="flex items-center space-x-2">
                   <Button
                     type="button"
@@ -375,6 +375,15 @@ export default function ScriptEditor() {
                     {isActive ? "Enabled" : "Disabled"}
                   </Button>
                 </div>
+
+                <Button
+                  variant="outline"
+                  className="border-red-500 text-red-500 hover:bg-red-500/10"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
               </div>
             )}
           </div>
