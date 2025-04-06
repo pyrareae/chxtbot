@@ -6,8 +6,7 @@ import { Button } from "@/src/shadcn/ui/button"
 import { Input } from "@/src/shadcn/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/shadcn/ui/card"
 import { Badge } from "@/src/shadcn/ui/badge"
-import { MoreVertical, Play, Edit, Trash2, Search, Plus, AlertCircle } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/src/shadcn/ui/dropdown-menu"
+import { Edit, Search, Plus, AlertCircle } from "lucide-react"
 import { toast } from "@/src/hooks/use-toast"
 
 // Types from the backend
@@ -18,8 +17,6 @@ interface Command {
   isActive: boolean
   createdAt: string
   updatedAt: string
-  lastRun?: string
-  status?: "success" | "failed" | "running" | "idle"
 }
 
 export default function CommandsView() {
@@ -39,15 +36,7 @@ export default function CommandsView() {
         throw new Error("Failed to fetch commands")
       }
       const data = await response.json()
-      
-      // Transform the data to include status and lastRun properties
-      const transformedData = data.map((cmd: Command) => ({
-        ...cmd,
-        lastRun: cmd.updatedAt ? new Date(cmd.updatedAt).toLocaleDateString() : "Never",
-        status: cmd.isActive ? "idle" : "disabled"
-      }))
-      
-      setCommands(transformedData)
+      setCommands(data)
     } catch (error) {
       console.error("Error fetching commands:", error)
       toast({
@@ -70,92 +59,10 @@ export default function CommandsView() {
     window.location.href = `/script-editor?id=${commandId}`
   }
 
-  const handleRun = async (commandId: number) => {
-    try {
-      // Update the local state to show the command is running
-      setCommands((prevCommands: Command[]) => 
-        prevCommands.map((cmd: Command) => 
-          cmd.id === commandId ? { ...cmd, status: "running" } : cmd
-        )
-      )
-
-      const response = await fetch(`/api/commands/${commandId}/run`, {
-        method: "POST",
-      })
-      
-      if (!response.ok) {
-        throw new Error("Failed to run command")
-      }
-      
-      // Update the command status to success after successful execution
-      setCommands((prevCommands: Command[]) => 
-        prevCommands.map((cmd: Command) => 
-          cmd.id === commandId ? { ...cmd, status: "success", lastRun: new Date().toLocaleDateString() } : cmd
-        )
-      )
-      
-      toast({
-        title: "Success",
-        description: "Command executed successfully",
-      })
-    } catch (error) {
-      console.error("Error running command:", error)
-      
-      // Update the command status to failed after failed execution
-      setCommands((prevCommands: Command[]) => 
-        prevCommands.map((cmd: Command) => 
-          cmd.id === commandId ? { ...cmd, status: "failed" } : cmd
-        )
-      )
-      
-      toast({
-        title: "Error",
-        description: "Failed to run command",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleDelete = async (commandId: number) => {
-    try {
-      const response = await fetch(`/api/commands/${commandId}`, {
-        method: "DELETE",
-      })
-      
-      if (!response.ok) {
-        throw new Error("Failed to delete command")
-      }
-      
-      // Remove the command from the list
-      setCommands(commands.filter((cmd: Command) => cmd.id !== commandId))
-      
-      toast({
-        title: "Success",
-        description: "Command deleted successfully",
-      })
-    } catch (error) {
-      console.error("Error deleting command:", error)
-      toast({
-        title: "Error",
-        description: "Failed to delete command",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "success":
-        return "bg-green-500/20 text-green-500 hover:bg-green-500/30"
-      case "failed":
-        return "bg-red-500/20 text-red-500 hover:bg-red-500/30"
-      case "running":
-        return "bg-blue-500/20 text-blue-500 hover:bg-blue-500/30"
-      case "disabled":
-        return "bg-gray-500/20 text-gray-500 hover:bg-gray-500/30"
-      default:
-        return "bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30"
-    }
+  const getStatusColor = (isActive: boolean) => {
+    return isActive 
+      ? "bg-green-500/20 text-green-500 hover:bg-green-500/30" 
+      : "bg-gray-500/20 text-gray-500 hover:bg-gray-500/30"
   }
 
   return (
@@ -193,9 +100,8 @@ export default function CommandsView() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Command</TableHead>
-                  <TableHead className="hidden md:table-cell">Last Run</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  <TableHead className="w-[100px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -203,44 +109,26 @@ export default function CommandsView() {
                   filteredCommands.map((command: Command) => (
                     <TableRow key={command.id}>
                       <TableCell className="font-medium">{command.name}</TableCell>
-                      <TableCell className="hidden md:table-cell">{command.lastRun}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={getStatusColor(command.status || "idle")}>
-                          {command.status || "idle"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleRun(command.id)} title="Run command">
-                            <Play className="h-4 w-4" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(command.id)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDelete(command.id)}
-                                className="text-red-500 focus:text-red-500"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                        <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(command.isActive)}`}>
+                          {command.isActive ? "Enabled" : "Disabled"}
                         </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleEdit(command.id)}
+                          title="Edit command"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                       <div className="flex flex-col items-center justify-center">
                         <AlertCircle className="h-10 w-10 mb-2 text-muted-foreground" />
                         {searchQuery ? (
