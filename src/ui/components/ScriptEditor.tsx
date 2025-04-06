@@ -365,14 +365,15 @@ export default function ScriptEditor() {
                 </Button>
 
                 <div className="flex items-center space-x-2">
-                  <Switch
-                    id="script-active"
-                    checked={isActive}
-                    onCheckedChange={(checked: boolean) => setIsActive(checked)}
-                  />
-                  <Label htmlFor="script-active" className="cursor-pointer">
+                  <Button
+                    type="button"
+                    variant={isActive ? "default" : "outline"}
+                    className={isActive ? "bg-green-600 hover:bg-green-700" : "text-gray-400 hover:text-white"}
+                    onClick={() => setIsActive(!isActive)}
+                  >
+                    <Power className="h-4 w-4 mr-2" />
                     {isActive ? "Enabled" : "Disabled"}
-                  </Label>
+                  </Button>
                 </div>
               </div>
             )}

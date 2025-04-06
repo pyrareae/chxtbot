@@ -18,5 +18,4 @@ dumps = false
 # Define a path alias
 [paths]
 "react" = "./node_modules/react/index.js"
-"@components/*" = "./src/components/*"
 "@/lib/*" = "./src/lib/*" 
