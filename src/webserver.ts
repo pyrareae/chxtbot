@@ -520,7 +520,7 @@ IMPORTANT: Respond ONLY with the complete JavaScript code and nothing else.
     // Generate content with Gemini
     // const result = await model.generateContent(systemPrompt);
     const result = await genAI.models.generateContent({
-        model: "gemini-2.5-pro-preview-03-25",
+        model: "gemini-2.0-flash",
         contents: systemPrompt
     });
     // const response = result.response;
@@ -528,7 +528,7 @@ IMPORTANT: Respond ONLY with the complete JavaScript code and nothing else.
     
     // Clean up the response to ensure we only get code
     // Remove any markdown code blocks if present
-    responseText = responseText.replace(/```javascript|```js|```|`/g, '').trim();
+    responseText = responseText.replace(/```javascript|```js|```/g, '').trim();
     
     return responseText;
   } catch (error) {
