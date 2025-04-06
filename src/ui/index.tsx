@@ -1,28 +1,32 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { App } from './components/App';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import CommandsView from './components/CommandsView';
 import ScriptEditor from './components/ScriptEditor';
+import { ThemeProvider } from './components/theme-provider';
 
 import './styles.css';
 
-interface RouteMap {
-  [key: string]: React.ReactNode;
+// This component sets up our routes
+function App() {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<CommandsView />} />
+          <Route path="/commands" element={<CommandsView />} />
+          <Route path="/script-editor" element={<ScriptEditor />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
+  );
 }
 
-const routeMap: RouteMap = {
-  '/': <App />,
-  '/commands': <CommandsView />,
-  '/script-editor': <ScriptEditor />
-};
-
-// Determine which component to render based on the current URL path
-const path = window.location.pathname;
-const Component = routeMap[path] || routeMap['/'];
-
-// Render the component to the DOM
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(Component);
-} 
+// Initialize the app when DOM content is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+    const root = createRoot(rootElement);
+    root.render(<App />);
+  }
+}); 

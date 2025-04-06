@@ -1,8 +1,8 @@
 import { serve } from "bun";
 import { main, connections } from "./chxt";
-import indexHtml from "../public/index.html";
 import { initializeDatabase, UserRepository, CommandRepository } from "./database";
 import CommandRunner from './commandRunner';
+import indexHtml from "../public/index.html";
 
 // Import global styles
 import "./styles/globals.css";
@@ -19,9 +19,12 @@ const initializeApp = async () => {
 
   // Define API endpoints to interact with the IRC client
   const server = serve({
+    // Use HTML imports as routes
     routes: {
-      // The main page - serves the React application
+      // Route the HTML file to root and client-side routes
       "/": indexHtml,
+      "/commands": indexHtml,
+      "/script-editor": indexHtml,
       
       // API endpoint to get all connections
       "/api/connections": {
@@ -37,7 +40,7 @@ const initializeApp = async () => {
       
       // API endpoint to get messages for a specific channel
       "/api/messages": {
-        GET(req: Request) {
+        GET(req) {
           const url = new URL(req.url);
           const server = url.searchParams.get("server");
           const channel = url.searchParams.get("channel");
@@ -74,7 +77,7 @@ const initializeApp = async () => {
       
       // API endpoint to send a message to a channel
       "/api/send-message": {
-        async POST(req: Request) {
+        async POST(req) {
           try {
             const data = await req.json();
             const { server, channel, message } = data as { 
@@ -104,8 +107,6 @@ const initializeApp = async () => {
         }
       },
       
-      // API endpoints for database operations
-      
       // Users API
       "/api/users": {
         async GET() {
@@ -128,7 +129,7 @@ const initializeApp = async () => {
             return Response.json({ error: "Failed to fetch commands" }, { status: 500 });
           }
         },
-        POST: async (req: Request) => {
+        POST: async (req) => {
           try {
             const body = await req.json();
             
@@ -163,7 +164,7 @@ const initializeApp = async () => {
       
       // Individual command route
       "/api/commands/:id": {
-        GET: async (req: Request, { id }: { id: string }) => {
+        GET: async (req, { id }) => {
           try {
             const commandId = parseInt(id);
             
@@ -186,7 +187,7 @@ const initializeApp = async () => {
             return Response.json({ error: "Failed to fetch command" }, { status: 500 });
           }
         },
-        PUT: async (req: Request, { id }: { id: string }) => {
+        PUT: async (req, { id }) => {
           try {
             const commandId = parseInt(id);
             
@@ -222,7 +223,7 @@ const initializeApp = async () => {
             return Response.json({ error: "Failed to update command" }, { status: 500 });
           }
         },
-        DELETE: async (req: Request, { id }: { id: string }) => {
+        DELETE: async (req, { id }) => {
           try {
             const commandId = parseInt(id);
             
@@ -246,7 +247,7 @@ const initializeApp = async () => {
       
       // Command run route
       "/api/commands/:id/run": {
-        POST: async (req: Request, { id }: { id: string }) => {
+        POST: async (req, { id }) => {
           try {
             const commandId = parseInt(id);
             
@@ -289,7 +290,7 @@ const initializeApp = async () => {
       
       // Command test route
       "/api/commands/test": {
-        POST: async (req: Request) => {
+        POST: async (req) => {
           try {
             const body = await req.json();
             
@@ -323,7 +324,7 @@ const initializeApp = async () => {
 
   console.log("Starting webserver on http://localhost:3000");
   console.log("API routes available at /api/*");
-  console.log("UI available at / and /commands");
+  console.log("UI available at / and all client-side routes with React Router");
 
   console.log(`Server running at ${server.url}`);
 };

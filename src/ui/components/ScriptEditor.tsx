@@ -7,9 +7,9 @@ import { Input } from "@/src/shadcn/ui/input"
 import { Textarea } from "@/src/shadcn/ui/textarea"
 import { Label } from "@/src/shadcn/ui/label"
 import { Card, CardContent } from "@/src/shadcn/ui/card"
-import { useMediaQuery } from "../../hooks/use-mobile"
+import { useMediaQuery } from "@/src/hooks/use-mobile"
 import { Terminal, Save, ArrowLeft } from "lucide-react"
-import { toast } from "../../hooks/use-toast"
+import { toast } from "@/src/hooks/use-toast"
 
 interface Command {
   id: number
@@ -163,31 +163,24 @@ export default function ScriptEditor() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4 flex justify-center items-center h-screen">
+      <div className="container mx-auto p-4 flex justify-center items-center h-screen bg-black">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto p-4 bg-background text-foreground min-h-screen">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={() => window.location.href = "/commands"} className="mr-2">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">{commandId ? "Edit Command" : "Create Command"}</h1>
-        </div>
-      </div>
+    <div className="container mx-auto p-4 min-h-screen bg-black text-white">
+      <h1 className="text-2xl font-bold mb-6">Script Manager</h1>
 
-      <Card className="bg-card">
-        <CardContent className={`p-6 ${isDesktop ? "grid grid-cols-3 gap-6" : "space-y-6"}`}>
-          {/* Editor - Now on the left side */}
-          <div className={isDesktop ? "col-span-2" : ""}>
+      <Card className="bg-[#111] border-0 shadow-none">
+        <CardContent className={`p-6 ${isDesktop ? "grid grid-cols-12 gap-6" : "space-y-6"}`}>
+          {/* Editor - on the left side */}
+          <div className={isDesktop ? "col-span-8" : ""}>
             <Label htmlFor="script-editor" className="block mb-2">
               Script
             </Label>
-            <div className="border border-border rounded-md overflow-hidden" style={{ height: "400px" }}>
+            <div className="rounded-md overflow-hidden" style={{ height: "400px" }}>
               <Editor
                 height="100%"
                 defaultLanguage="javascript"
@@ -199,13 +192,20 @@ export default function ScriptEditor() {
                   scrollBeyondLastLine: false,
                   fontSize: 14,
                   tabSize: 2,
+                  lineNumbers: "on",
+                  lineDecorationsWidth: 0,
+                  renderLineHighlight: "all",
+                  scrollbar: {
+                    vertical: "hidden",
+                    horizontal: "hidden",
+                  },
                 }}
               />
             </div>
           </div>
 
-          {/* Sidebar - Now on the right side */}
-          <div className={isDesktop ? "col-span-1 space-y-4" : "space-y-4"}>
+          {/* Sidebar - on the right side */}
+          <div className={isDesktop ? "col-span-4 space-y-4" : "space-y-4"}>
             <div className="space-y-2">
               <Label htmlFor="command-name">Command Name</Label>
               <Input
@@ -213,7 +213,7 @@ export default function ScriptEditor() {
                 placeholder="Enter command name"
                 value={commandName}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCommandName(e.target.value)}
-                className="bg-input"
+                className="bg-[#222] border-0 text-white placeholder-gray-500"
               />
             </div>
 
@@ -222,13 +222,13 @@ export default function ScriptEditor() {
               <Textarea
                 id="description"
                 placeholder="Enter script description"
-                className="min-h-[100px] resize-none bg-input"
+                className="min-h-[100px] resize-none bg-[#222] border-0 text-white placeholder-gray-500"
                 value={description}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
               />
             </div>
 
-            {/* New Test Section */}
+            {/* Test Section */}
             <div className="space-y-2">
               <Label htmlFor="test">Test Script</Label>
               <Input
@@ -236,12 +236,12 @@ export default function ScriptEditor() {
                 placeholder="Enter test parameters"
                 value={testInput}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTestInput(e.target.value)}
-                className="bg-input mb-2"
+                className="bg-[#222] border-0 text-white placeholder-gray-500 mb-2"
               />
               <div className="flex space-x-2">
                 <Button 
                   variant="outline" 
-                  className="flex-1 bg-input" 
+                  className="flex-1 bg-[#222] border-0 text-white hover:bg-[#333]" 
                   onClick={handleTest} 
                   disabled={isTestLoading}
                 >
@@ -252,7 +252,7 @@ export default function ScriptEditor() {
 
               {/* Test Result Box */}
               {testResult && (
-                <div className="mt-2 p-3 bg-muted rounded-md font-mono text-sm overflow-auto max-h-[150px]">
+                <div className="mt-2 p-3 bg-[#222] rounded-md font-mono text-sm overflow-auto max-h-[150px]">
                   {testResult.split("\n").map((line: string, i: number) => (
                     <div key={i}>{line}</div>
                   ))}
@@ -261,13 +261,12 @@ export default function ScriptEditor() {
             </div>
 
             <Button 
-              className="w-full mt-4" 
+              className="w-full mt-4 bg-white text-black hover:bg-gray-200" 
               onClick={handleSave} 
               variant="default"
               disabled={isSaving}
             >
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? "Saving..." : "Save Command"}
+              {isSaving ? "Saving..." : "Save Script"}
             </Button>
           </div>
         </CardContent>
