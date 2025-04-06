@@ -207,10 +207,23 @@ const initializeApp = async () => {
             }
             
             // Run the command
+            console.log(`Running command ${command.name} with code:\n${command.code}`);
+            console.log(`Argument: "${argument}"`);
+            
             const commandRunner = new CommandRunner();
             const result = await commandRunner.runScript(command.code, argument);
             
-            return Response.json({ success: true, result });
+            console.log(`Command execution result type: ${typeof result}`);
+            console.log(`Command execution result: "${result}"`);
+            
+            return Response.json({ 
+              success: true, 
+              result,
+              command: {
+                id: command.id,
+                name: command.name
+              }
+            });
           } catch (error) {
             console.error("Error running command:", error);
             return Response.json(
