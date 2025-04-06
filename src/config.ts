@@ -20,8 +20,17 @@ export class Server extends ConnectionDetails {
     Object.assign(this, params)
   }
 }
+
+// Define APIKeys interface
+export interface APIKeys {
+  gemini: string;
+  [key: string]: string;
+}
+
 export class Config extends ConnectionDetails {
   servers: Server[] = [];
+  api_keys: APIKeys = { gemini: '' };
+  
   constructor(params: Config) {
     super()
     Object.assign(this, params)
@@ -41,7 +50,16 @@ async function readConfig(): Promise<Config> {
   const data = await readFile(new URL("../config.toml", import.meta.url))
     .then(buff => toml.parse(buff.toString('utf8')))
   
+  // Format server data
   data.servers = formatServerData(data.servers).map(def => new Server(def))
+  
+  // Ensure api_keys is defined
+  if (!data.api_keys) {
+    data.api_keys = { gemini: '' };
+    console.warn("Warning: No API keys found in config.toml");
+  } else {
+    console.log("API keys loaded from config.toml:", Object.keys(data.api_keys));
+  }
   
   return new Config(data)
 }

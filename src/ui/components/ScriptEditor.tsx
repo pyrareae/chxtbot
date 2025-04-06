@@ -8,7 +8,7 @@ import { Textarea } from "@/src/ui/components/textarea";
 import { Label } from "@/src/ui/components/label";
 import { Card, CardContent } from "@/src/ui/components/card";
 import { useMediaQuery } from "@/src/hooks/use-mobile";
-import { Terminal, Save, ArrowLeft, Trash2, Power } from "lucide-react";
+import { Terminal, Save, ArrowLeft, Trash2, Power, Sparkles } from "lucide-react";
 import { toast } from "@/src/hooks/use-toast";
 import { Switch } from "@/src/ui/components/switch";
 import {
@@ -51,6 +51,8 @@ export default function ScriptEditor() {
   const [isActive, setIsActive] = useState(true);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
 
   // Get the command ID from the URL query parameters
   useEffect(() => {
@@ -229,6 +231,59 @@ export default function ScriptEditor() {
     }
   };
 
+  const handleAiGenerate = async () => {
+    if (!aiPrompt.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an AI prompt",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsGeneratingCode(true);
+
+      const response = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code: scriptContent,
+          prompt: aiPrompt,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to generate code");
+      }
+
+      const data = await response.json();
+      
+      // Update the editor with the generated code
+      setScriptContent(data.code);
+      
+      toast({
+        title: "Success",
+        description: "Code generated successfully",
+      });
+      
+      // Clear the prompt field
+      setAiPrompt("");
+    } catch (error) {
+      console.error("Error generating code:", error);
+      toast({
+        title: "Error",
+        description: `Failed to generate code: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-black">
@@ -316,6 +371,31 @@ export default function ScriptEditor() {
                   setDescription(e.target.value)
                 }
               />
+            </div>
+            
+            {/* AI Code Generation Section */}
+            <div className="space-y-2 mt-6 p-4 border border-blue-500/30 rounded-md bg-[#111]">
+              <Label htmlFor="ai-prompt" className="flex items-center">
+                <Sparkles className="h-4 w-4 mr-2 text-yellow-400" />
+                Edit with AI
+              </Label>
+              <Textarea
+                id="ai-prompt"
+                placeholder="Describe what you want the AI to do with your code..."
+                className="min-h-[80px] resize-none bg-[#222] border-0 text-white placeholder-gray-500"
+                value={aiPrompt}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setAiPrompt(e.target.value)
+                }
+              />
+              <Button
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                onClick={handleAiGenerate}
+                disabled={isGeneratingCode}
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                {isGeneratingCode ? "Generating..." : "Generate Code"}
+              </Button>
             </div>
 
             {/* Test Section */}

@@ -3,7 +3,8 @@ import { main, connections } from "./chxt";
 import { initializeDatabase, UserRepository, CommandRepository } from "./database";
 import CommandRunner from './commandRunner';
 import indexHtml from "../public/index.html";
-
+import config from "./config";
+import { GoogleGenAI } from "@google/genai";
 // Import global styles
 import "./styles/globals.css";
 
@@ -405,6 +406,39 @@ const initializeApp = async () => {
             );
           }
         }
+      },
+      
+      // AI code generation endpoint
+      "/api/ai/generate": {
+        POST: async (req) => {
+          // Check authentication
+          if (!isAuthenticated(req)) {
+            return Response.json({ error: "Unauthorized" }, { status: 401 });
+          }
+          
+          try {
+            const body = await req.json();
+            
+            // Validate required fields
+            if (!body.code || !body.prompt) {
+              return Response.json(
+                { error: "Code and prompt are required" },
+                { status: 400 }
+              );
+            }
+            
+            // Call the Gemini API
+            const aiResponse = await generateCodeWithAI(body.code, body.prompt);
+            
+            return Response.json({ success: true, code: aiResponse });
+          } catch (error) {
+            console.error("Error generating code with AI:", error);
+            return Response.json(
+              { error: "Failed to generate code", message: error instanceof Error ? error.message : "Unknown error" },
+              { status: 500 }
+            );
+          }
+        }
       }
     },
     
@@ -440,8 +474,78 @@ function isAuthenticated(req) {
   return session && session.authenticated;
 }
 
+// Helper function for AI code generation using Gemini
+async function generateCodeWithAI(code: string, prompt: string): Promise<string> {
+  try {
+    // Check if API key is configured
+    const apiKey = config.api_keys?.gemini;
+    if (!apiKey) {
+      console.error("API key from config:", config.api_keys);
+      throw new Error("Gemini API key not configured or not loaded properly. Check your config.toml file.");
+    }
+    
+    console.log("Using Gemini API with key:", apiKey.substring(0, 10) + "...");
+    
+    // Initialize the Gemini API
+    const genAI = new GoogleGenAI(apiKey);
+    
+    // Create a detailed prompt for the AI
+    const systemPrompt = `
+You are a JavaScript expert helping modify code for an IRC chatbot command.
+Below is the current code and a request to modify it. 
+
+CONTEXT:
+- This is a command script for an IRC chatbot.
+- The script should export a 'run' function that takes an argument and returns a string.
+- Available APIs: You can use standard JavaScript functions and Node.js built-ins.
+- You can make HTTP requests with fetch().
+- The command will run in a sandboxed environment.
+
+RULES:
+- Return ONLY valid JavaScript code, with no explanations or markdown formatting.
+- Do not include backticks, code blocks, or any text other than the JavaScript code itself.
+- Always include the full, complete code (not just the changes).
+- Ensure the code includes a 'run' function that takes an argument and returns a string.
+
+CURRENT CODE:
+\`\`\`javascript
+${code}
+\`\`\`
+
+REQUESTED CHANGE:
+${prompt}
+
+IMPORTANT: Respond ONLY with the complete JavaScript code and nothing else.
+`;
+    
+    // Generate content with Gemini
+    // const result = await model.generateContent(systemPrompt);
+    const result = await genAI.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: systemPrompt
+    });
+    // const response = result.response;
+    let responseText = result.text;
+    
+    // Clean up the response to ensure we only get code
+    // Remove any markdown code blocks if present
+    responseText = responseText.replace(/```javascript|```js|```|`/g, '').trim();
+    
+    return responseText;
+  } catch (error) {
+    console.error("Error calling Gemini API:", error);
+    throw new Error(`AI code generation failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
+}
+
 // Start application
 initializeApp().catch(error => {
   console.error("Failed to start application:", error);
   process.exit(1);
+});
+
+// Log config on startup
+console.log("Config loaded:", {
+  servers: config.servers.length, 
+  apiKeys: config.api_keys ? Object.keys(config.api_keys) : "none"
 }); 

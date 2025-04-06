@@ -8,3 +8,6 @@ channels = [
 [servers.libera]
 host = "irc.libera.chat"
 port = 6665
+
+[api_keys]
+gemini = "AIzaSyCLIWyHngrX2Y5xtSJ4O0TTw7y_EBImx1U" # Get from https://aistudio.google.com/app/apikey
