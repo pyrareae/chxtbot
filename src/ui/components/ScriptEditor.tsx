@@ -163,114 +163,116 @@ export default function ScriptEditor() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4 flex justify-center items-center h-screen bg-black">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      <div className="flex h-screen w-full items-center justify-center bg-black">
+        <div className="h-16 w-16 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
       </div>
     )
   }
 
   return (
     <div className="container mx-auto p-4 min-h-screen bg-black text-white">
-      <h1 className="text-2xl font-bold mb-6">Script Manager</h1>
+      <h1 className="text-3xl font-bold text-blue-400 mb-6">Script Manager</h1>
 
-      <Card className="bg-[#111] border-0 shadow-none">
-        <CardContent className={`p-6 ${isDesktop ? "grid grid-cols-12 gap-6" : "space-y-6"}`}>
-          {/* Editor - on the left side */}
-          <div className={isDesktop ? "col-span-8" : ""}>
-            <Label htmlFor="script-editor" className="block mb-2">
-              Script
-            </Label>
-            <div className="rounded-md overflow-hidden" style={{ height: "400px" }}>
-              <Editor
-                height="100%"
-                defaultLanguage="javascript"
-                value={scriptContent}
-                onChange={(value: string | undefined) => setScriptContent(value || "")}
-                theme="vs-dark"
-                options={{
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  fontSize: 14,
-                  tabSize: 2,
-                  lineNumbers: "on",
-                  lineDecorationsWidth: 0,
-                  renderLineHighlight: "all",
-                  scrollbar: {
-                    vertical: "hidden",
-                    horizontal: "hidden",
-                  },
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Sidebar - on the right side */}
-          <div className={isDesktop ? "col-span-4 space-y-4" : "space-y-4"}>
-            <div className="space-y-2">
-              <Label htmlFor="command-name">Command Name</Label>
-              <Input
-                id="command-name"
-                placeholder="Enter command name"
-                value={commandName}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCommandName(e.target.value)}
-                className="bg-[#222] border-0 text-white placeholder-gray-500"
-              />
+      <div className="p-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
+        <Card className="bg-black border-0 shadow-none">
+          <CardContent className={`p-6 ${isDesktop ? "grid grid-cols-12 gap-6" : "space-y-6"}`}>
+            {/* Editor - on the left side */}
+            <div className={isDesktop ? "col-span-8" : ""}>
+              <Label htmlFor="script-editor" className="block mb-2">
+                Script
+              </Label>
+              <div className="rounded-md overflow-hidden" style={{ height: "400px" }}>
+                <Editor
+                  height="100%"
+                  defaultLanguage="javascript"
+                  value={scriptContent}
+                  onChange={(value: string | undefined) => setScriptContent(value || "")}
+                  theme="vs-dark"
+                  options={{
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    fontSize: 14,
+                    tabSize: 2,
+                    lineNumbers: "on",
+                    lineDecorationsWidth: 0,
+                    renderLineHighlight: "all",
+                    scrollbar: {
+                      vertical: "hidden",
+                      horizontal: "hidden",
+                    },
+                  }}
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Enter script description"
-                className="min-h-[100px] resize-none bg-[#222] border-0 text-white placeholder-gray-500"
-                value={description}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
-              />
-            </div>
-
-            {/* Test Section */}
-            <div className="space-y-2">
-              <Label htmlFor="test">Test Script</Label>
-              <Input
-                id="test-input"
-                placeholder="Enter test parameters"
-                value={testInput}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTestInput(e.target.value)}
-                className="bg-[#222] border-0 text-white placeholder-gray-500 mb-2"
-              />
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 bg-[#222] border-0 text-white hover:bg-[#333]" 
-                  onClick={handleTest} 
-                  disabled={isTestLoading}
-                >
-                  <Terminal className="mr-2 h-4 w-4" />
-                  {isTestLoading ? "Running..." : "Run Test"}
-                </Button>
+            {/* Sidebar - on the right side */}
+            <div className={isDesktop ? "col-span-4 space-y-4" : "space-y-4"}>
+              <div className="space-y-2">
+                <Label htmlFor="command-name">Command Name</Label>
+                <Input
+                  id="command-name"
+                  placeholder="Enter command name"
+                  value={commandName}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCommandName(e.target.value)}
+                  className="bg-[#222] border-0 text-white placeholder-gray-500"
+                />
               </div>
 
-              {/* Test Result Box */}
-              {testResult && (
-                <div className="mt-2 p-3 bg-[#222] rounded-md font-mono text-sm overflow-auto max-h-[150px]">
-                  {testResult.split("\n").map((line: string, i: number) => (
-                    <div key={i}>{line}</div>
-                  ))}
-                </div>
-              )}
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Enter script description"
+                  className="min-h-[100px] resize-none bg-[#222] border-0 text-white placeholder-gray-500"
+                  value={description}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
+                />
+              </div>
 
-            <Button 
-              className="w-full mt-4 bg-white text-black hover:bg-gray-200" 
-              onClick={handleSave} 
-              variant="default"
-              disabled={isSaving}
-            >
-              {isSaving ? "Saving..." : "Save Script"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              {/* Test Section */}
+              <div className="space-y-2">
+                <Label htmlFor="test">Test Script</Label>
+                <Input
+                  id="test-input"
+                  placeholder="Enter test parameters"
+                  value={testInput}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTestInput(e.target.value)}
+                  className="bg-[#222] border-0 text-white placeholder-gray-500 mb-2"
+                />
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 bg-[#222] border-0 text-white hover:bg-[#333]" 
+                    onClick={handleTest} 
+                    disabled={isTestLoading}
+                  >
+                    <Terminal className="mr-2 h-4 w-4" />
+                    {isTestLoading ? "Running..." : "Run Test"}
+                  </Button>
+                </div>
+
+                {/* Test Result Box */}
+                {testResult && (
+                  <div className="mt-2 p-3 bg-[#222] rounded-md font-mono text-sm overflow-auto max-h-[150px]">
+                    {testResult.split("\n").map((line: string, i: number) => (
+                      <div key={i}>{line}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Button 
+                className="w-full mt-4 bg-white text-black hover:bg-gray-200" 
+                onClick={handleSave} 
+                variant="default"
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Save Script"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 } 

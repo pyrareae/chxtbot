@@ -1,7 +1,7 @@
 [serve.static]
 development = true
-# We can add TailwindCSS later if needed
-# plugins = ["bun-plugin-tailwind"] 
+# Enable Tailwind CSS
+plugins = ["bun-plugin-tailwind"]
 
 [install]
 # Whether to install optionalDependencies
