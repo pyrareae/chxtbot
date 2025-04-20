@@ -8,7 +8,7 @@
   "scripts": {
     "build": "bun build ./src/chxt.ts",
     "test": "mocha",
-    "start": "bun --watch ./src/webserver.ts --watch=src/**/*.ts",
+    "start": "bun --hot run ./src/webserver.ts",
     "console": "bun ./src/console.js",
     "dev": "start",
     "add-user": "bun run src/cli/add-user.ts",

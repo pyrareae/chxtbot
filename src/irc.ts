@@ -42,10 +42,14 @@ export default class ChxtIrc {
       ...pick(['nick', 'username', 'encoding', 'version', 'port', 'host', 'channels'], con),
       account: pick(['account', 'password'], con)
     }
-    // console.log(conf)
     this.client = new IRC.Client(conf)
-    // this.client.on('raw', ({line}) => console.log(line))
-    // this.client.on('debug', console.log)
+
+    if (process.env.DEBUG) {
+      console.log(conf)
+      this.client.on('raw', ({line}) => console.log(line))
+      this.client.on('debug', console.log)
+    }
+
     this.client.on('registered', () => {
       this.config.channels.forEach(channelName => {
         const channel = this.client.channel(channelName as string)
