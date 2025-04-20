@@ -8,3 +8,7 @@ alwaysApply: true
 - This project uses bun, as a fullstack server and bundler. https://bun.sh/docs/bundler/fullstack
 - This project is an irc utility chatbot. It has a webui for managing command scripts
 - Run the server with `bun start` this is configured to automatically reload on source changes so you usually don't need to restart the server.
+- Check [package.json](mdc:package.json) to see what our stack is using.
+- When you add something new or learn somethine about the codebase document it for furture work in the /docs directory.
+- Always check if there are docs in the /docs directory that are useful to the task you are performing!
+- If you are stuck ask the user for help, or ask any question to clear up ambiguity!
